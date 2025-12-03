@@ -1,0 +1,25 @@
+{
+  "name": "EMOM - Every Minute On the Minute",
+  "short_name": "EMOM",
+  "description": "Application de suivi d'entraînement EMOM simple et efficace",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["fitness", "health", "sports"]
+}
