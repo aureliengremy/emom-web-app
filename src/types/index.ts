@@ -88,7 +88,7 @@ export interface SessionPlan {
 
 // === Timer ===
 
-export type TimerStatus = "idle" | "running" | "paused" | "finished";
+export type TimerStatus = "idle" | "countdown" | "running" | "paused" | "finished";
 
 export interface TimerState {
   status: TimerStatus;
@@ -99,6 +99,7 @@ export interface TimerState {
   totalSets: number;
   isPausingBetweenSets: boolean;
   pauseSecondsRemaining: number;
+  countdownSeconds: number; // countdown avant le début
 }
 
 // === User Settings ===

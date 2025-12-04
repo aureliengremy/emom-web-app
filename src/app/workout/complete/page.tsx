@@ -6,12 +6,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useWorkoutStore } from "@/stores/workout-store";
 import { useSessionStore } from "@/stores/session-store";
+import { useAuthStore } from "@/stores/auth-store";
 import { formatDuration, type WorkoutRating } from "@/types";
-import { Trophy, Clock, Repeat, Home } from "lucide-react";
+import { Trophy, Clock, Repeat, Home, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const RATING_OPTIONS: { value: WorkoutRating; emoji: string; label: string }[] = [
@@ -24,6 +26,8 @@ export default function WorkoutCompletePage() {
   const router = useRouter();
   const { currentWorkout, finishWorkout } = useWorkoutStore();
   const { clearSession } = useSessionStore();
+  const { user } = useAuthStore();
+  const isGuest = !user;
   const [selectedRating, setSelectedRating] = useState<WorkoutRating | null>(null);
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -43,9 +47,16 @@ export default function WorkoutCompletePage() {
 
   const handleFinish = async () => {
     setIsSaving(true);
-    await finishWorkout(selectedRating ?? undefined, notes || undefined);
-    clearSession();
-    router.push("/");
+    try {
+      await finishWorkout(selectedRating ?? undefined, notes || undefined);
+      clearSession();
+      router.push("/");
+    } catch (error) {
+      console.error("Erreur sauvegarde workout:", error);
+      // Même en cas d'erreur, on retourne à l'accueil
+      clearSession();
+      router.push("/");
+    }
   };
 
   return (
@@ -101,39 +112,61 @@ export default function WorkoutCompletePage() {
         </div>
       </div>
 
-      {/* Rating */}
-      <div className="mx-auto mb-6 w-full max-w-lg">
-        <h2 className="mb-3 text-lg font-semibold">Comment c&apos;était ?</h2>
-        <div className="flex justify-center gap-4">
-          {RATING_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => setSelectedRating(option.value)}
-              className={cn(
-                "flex flex-col items-center gap-1 rounded-xl p-4 transition-all",
-                selectedRating === option.value
-                  ? "bg-primary/20 ring-2 ring-primary"
-                  : "bg-card hover:bg-card/80"
-              )}
-            >
-              <span className="text-3xl">{option.emoji}</span>
-              <span className="text-xs">{option.label}</span>
-            </button>
-          ))}
+      {/* Message mode invité */}
+      {isGuest && (
+        <div className="mx-auto mb-6 w-full max-w-lg rounded-lg bg-amber-500/10 p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 text-amber-600" />
+            <div>
+              <p className="font-medium text-amber-600">Mode invité</p>
+              <p className="text-sm text-muted-foreground">
+                Cette séance ne sera pas sauvegardée.
+              </p>
+              <Link href="/auth/login" className="text-sm text-primary hover:underline">
+                Créer un compte pour garder ton historique
+              </Link>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Notes */}
-      <div className="mx-auto mb-8 w-full max-w-lg">
-        <h2 className="mb-3 text-lg font-semibold">Notes (optionnel)</h2>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Ressenti, forme du jour..."
-          className="w-full rounded-xl bg-card p-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          rows={3}
-        />
-      </div>
+      {/* Rating - uniquement pour les utilisateurs connectés */}
+      {!isGuest && (
+        <div className="mx-auto mb-6 w-full max-w-lg">
+          <h2 className="mb-3 text-lg font-semibold">Comment c&apos;était ?</h2>
+          <div className="flex justify-center gap-4">
+            {RATING_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setSelectedRating(option.value)}
+                className={cn(
+                  "flex flex-col items-center gap-1 rounded-xl p-4 transition-all",
+                  selectedRating === option.value
+                    ? "bg-primary/20 ring-2 ring-primary"
+                    : "bg-card hover:bg-card/80"
+                )}
+              >
+                <span className="text-3xl">{option.emoji}</span>
+                <span className="text-xs">{option.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Notes - uniquement pour les utilisateurs connectés */}
+      {!isGuest && (
+        <div className="mx-auto mb-8 w-full max-w-lg">
+          <h2 className="mb-3 text-lg font-semibold">Notes (optionnel)</h2>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Ressenti, forme du jour..."
+            className="w-full rounded-xl bg-card p-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            rows={3}
+          />
+        </div>
+      )}
 
       {/* Bouton terminer */}
       <div className="mx-auto w-full max-w-lg">
@@ -144,7 +177,7 @@ export default function WorkoutCompletePage() {
           disabled={isSaving}
         >
           <Home className="h-5 w-5" />
-          {isSaving ? "Sauvegarde..." : "Terminer"}
+          {isSaving ? "Sauvegarde..." : isGuest ? "Retour à l'accueil" : "Sauvegarder et terminer"}
         </Button>
       </div>
     </div>

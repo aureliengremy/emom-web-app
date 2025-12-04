@@ -50,8 +50,13 @@ export async function saveSupabaseExercise(
     .upsert(dbExercise, { onConflict: "id" });
 
   if (error) {
-    console.error("Error saving exercise:", error);
-    throw error;
+    console.error("Error saving exercise:", {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+    });
+    throw new Error(error.message || "Erreur Supabase");
   }
 }
 

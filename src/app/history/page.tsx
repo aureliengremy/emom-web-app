@@ -4,6 +4,7 @@
 // Page historique des séances
 // ============================================
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { Container, Header, Main } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useWorkoutStore } from "@/stores/workout-store";
 import { formatDate, formatDuration } from "@/types";
-import { ArrowLeft, Calendar, Clock, Repeat, Star } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Repeat, Star, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const RATING_COLORS = {
@@ -27,7 +28,37 @@ const RATING_LABELS = {
 };
 
 export default function HistoryPage() {
-  const workoutHistory = useWorkoutStore((s) => s.workoutHistory);
+  const { workoutHistory, isLoaded, loadWorkouts } = useWorkoutStore();
+
+  // Charger les workouts au montage
+  useEffect(() => {
+    if (!isLoaded) {
+      loadWorkouts();
+    }
+  }, [isLoaded, loadWorkouts]);
+
+  // Afficher un loader pendant le chargement
+  if (!isLoaded) {
+    return (
+      <Container>
+        <Header>
+          <div className="flex items-center gap-2">
+            <Link href="/">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <h1 className="text-xl font-bold">Historique</h1>
+          </div>
+        </Header>
+        <Main>
+          <div className="flex min-h-[40vh] items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </Main>
+      </Container>
+    );
+  }
 
   // Trier par date décroissante
   const sortedHistory = [...workoutHistory].sort(

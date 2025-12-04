@@ -60,8 +60,10 @@ export function AddExerciseModal({ open, onOpenChange }: AddExerciseModalProps) 
       setName("");
       setCategory("push");
       setMax("");
-    } catch {
-      toast.error("Erreur lors de l'ajout");
+    } catch (error) {
+      console.error("Erreur ajout exercice:", error);
+      const message = error instanceof Error ? error.message : "Erreur lors de l'ajout";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

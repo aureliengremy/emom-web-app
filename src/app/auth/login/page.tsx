@@ -234,10 +234,16 @@ export default function LoginPage() {
           <Button
             variant="ghost"
             className="mt-6 text-muted-foreground"
-            onClick={() => router.push("/")}
+            onClick={() => {
+              sessionStorage.setItem("emom-guest-mode", "true");
+              router.push("/");
+            }}
           >
             Continuer sans compte
           </Button>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Mode invité : aucune sauvegarde ni historique
+          </p>
         </div>
       </Main>
     </Container>

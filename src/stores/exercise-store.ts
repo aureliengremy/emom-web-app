@@ -132,14 +132,19 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
       createdAt: now,
     };
 
-    if (user) {
-      await saveSupabaseExercise(user.id, exercise);
-    } else {
-      await saveLocalExercise(exercise);
-    }
+    try {
+      if (user) {
+        await saveSupabaseExercise(user.id, exercise);
+      } else {
+        await saveLocalExercise(exercise);
+      }
 
-    set((state) => ({ exercises: [...state.exercises, exercise] }));
-    return exercise;
+      set((state) => ({ exercises: [...state.exercises, exercise] }));
+      return exercise;
+    } catch (error) {
+      console.error("Error in addExercise:", error);
+      throw error;
+    }
   },
 
   updateExercise: async (id, updates) => {

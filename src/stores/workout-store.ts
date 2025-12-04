@@ -32,6 +32,7 @@ function getAuthUser() {
 }
 
 interface TickResult {
+  countdownComplete: boolean;
   minuteComplete: boolean;
   setComplete: boolean;
   workoutComplete: boolean;
@@ -81,6 +82,7 @@ const INITIAL_TIMER: TimerState = {
   totalSets: 1,
   isPausingBetweenSets: false,
   pauseSecondsRemaining: 0,
+  countdownSeconds: 10,
 };
 
 export const useWorkoutStore = create<WorkoutState>((set, get) => ({
@@ -163,7 +165,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
       currentWorkout: workout,
       sessionPlan: plan,
       timer: {
-        status: "running",
+        status: "countdown",
         secondsRemaining: 60,
         currentMinute: 1,
         totalMinutes: firstSet.duration,
@@ -171,6 +173,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
         totalSets: plan.sets.length,
         isPausingBetweenSets: false,
         pauseSecondsRemaining: 0,
+        countdownSeconds: 10,
       },
     });
   },
@@ -207,18 +210,37 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
       completed: true,
     };
 
+    // Sauvegarder uniquement si connecté (pas en mode invité)
     if (user) {
-      await saveSupabaseWorkout(user.id, finishedWorkout);
+      try {
+        console.log("Saving workout to Supabase...", finishedWorkout.id);
+        await saveSupabaseWorkout(user.id, finishedWorkout);
+        console.log("Workout saved successfully!");
+        set((state) => ({
+          workoutHistory: [finishedWorkout, ...state.workoutHistory],
+          currentWorkout: null,
+          sessionPlan: null,
+          timer: INITIAL_TIMER,
+        }));
+      } catch (error) {
+        console.error("Error saving workout:", error);
+        // Même en cas d'erreur, reset le workout en cours
+        set({
+          currentWorkout: null,
+          sessionPlan: null,
+          timer: INITIAL_TIMER,
+        });
+        throw error;
+      }
     } else {
-      await saveLocalWorkout(finishedWorkout);
+      // Mode invité : ne pas sauvegarder, juste reset
+      console.log("Guest mode - workout not saved");
+      set({
+        currentWorkout: null,
+        sessionPlan: null,
+        timer: INITIAL_TIMER,
+      });
     }
-
-    set((state) => ({
-      workoutHistory: [finishedWorkout, ...state.workoutHistory],
-      currentWorkout: null,
-      sessionPlan: null,
-      timer: INITIAL_TIMER,
-    }));
   },
 
   // === Timer ===
@@ -226,10 +248,34 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   tick: () => {
     const { timer, currentWorkout, sessionPlan } = get();
     const result: TickResult = {
+      countdownComplete: false,
       minuteComplete: false,
       setComplete: false,
       workoutComplete: false,
     };
+
+    // Gestion du countdown initial
+    if (timer.status === "countdown") {
+      if (timer.countdownSeconds > 1) {
+        set((state) => ({
+          timer: {
+            ...state.timer,
+            countdownSeconds: state.timer.countdownSeconds - 1,
+          },
+        }));
+      } else {
+        // Countdown terminé, démarrer le workout
+        result.countdownComplete = true;
+        set((state) => ({
+          timer: {
+            ...state.timer,
+            status: "running",
+            countdownSeconds: 0,
+          },
+        }));
+      }
+      return result;
+    }
 
     if (timer.status !== "running" || !currentWorkout || !sessionPlan) {
       return result;

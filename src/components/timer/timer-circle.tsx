@@ -40,9 +40,9 @@ export function TimerCircle({
       className={cn("relative flex items-center justify-center", className)}
       style={{ width: size, height: size }}
     >
-      {/* Cercle de fond */}
+      {/* Cercle de fond - sens horaire (comme une horloge) */}
       <svg
-        className="absolute -rotate-90"
+        className="absolute rotate-90 -scale-x-100"
         width={size}
         height={size}
       >

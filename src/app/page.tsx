@@ -4,7 +4,7 @@
 // Page d'accueil - Simplifiée
 // ============================================
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Container, Header, Main } from "@/components/layout/container";
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useExerciseStore } from "@/stores/exercise-store";
 import { useSessionStore } from "@/stores/session-store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   Play,
   Dumbbell,
@@ -23,13 +24,53 @@ import {
   Settings2,
   X,
   User,
+  Loader2,
+  Lock,
 } from "lucide-react";
 
 export default function HomePage() {
   const router = useRouter();
+  const { user, isInitialized, initialize } = useAuthStore();
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+
+  // Initialiser l'auth et vérifier si l'utilisateur doit se connecter
+  useEffect(() => {
+    const checkAuth = async () => {
+      await initialize();
+      setHasCheckedAuth(true);
+    };
+    checkAuth();
+  }, [initialize]);
+
+  // Rediriger vers login si pas encore vu la page de login
+  useEffect(() => {
+    if (hasCheckedAuth && isInitialized && !user) {
+      // Vérifier si l'utilisateur a déjà choisi de continuer sans compte
+      const guestMode = sessionStorage.getItem("emom-guest-mode");
+      if (!guestMode) {
+        router.push("/auth/login");
+      }
+    }
+  }, [hasCheckedAuth, isInitialized, user, router]);
+
   const exercises = useExerciseStore((s) => s.exercises);
   const { plannedSets, addSet, clearSession } = useSessionStore();
   const [configSetId, setConfigSetId] = useState<string | null>(null);
+
+  const isGuest = !user;
+
+  // Afficher un loader pendant l'initialisation
+  if (!hasCheckedAuth || !isInitialized) {
+    return (
+      <Container>
+        <Main>
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </Main>
+      </Container>
+    );
+  }
 
   const configSet = configSetId
     ? plannedSets.find((s) => s.id === configSetId) ?? null
@@ -64,6 +105,25 @@ export default function HomePage() {
       </Header>
 
       <Main>
+        {/* Bandeau mode invité */}
+        {isGuest && (
+          <div className="mb-6 rounded-lg bg-amber-500/10 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-amber-600">Mode invité</p>
+                <p className="text-sm text-muted-foreground">
+                  Tes séances ne seront pas sauvegardées
+                </p>
+              </div>
+              <Link href="/auth/login">
+                <Button size="sm" variant="outline">
+                  Se connecter
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Section Lancement Rapide */}
         <section className="mb-8">
           <h2 className="mb-4 text-lg font-semibold">Lancement rapide</h2>
@@ -174,8 +234,8 @@ export default function HomePage() {
               </Card>
             </Link>
 
-            <Link href="/history">
-              <Card className="transition-colors hover:bg-accent">
+            {isGuest ? (
+              <Card className="opacity-60">
                 <CardContent className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10">
@@ -184,14 +244,33 @@ export default function HomePage() {
                     <div>
                       <p className="font-medium">Historique</p>
                       <p className="text-sm text-muted-foreground">
-                        Voir mes séances
+                        Connecte-toi pour sauvegarder
                       </p>
                     </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  <Lock className="h-5 w-5 text-muted-foreground" />
                 </CardContent>
               </Card>
-            </Link>
+            ) : (
+              <Link href="/history">
+                <Card className="transition-colors hover:bg-accent">
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10">
+                        <History className="h-5 w-5 text-orange-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Historique</p>
+                        <p className="text-sm text-muted-foreground">
+                          Voir mes séances
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </CardContent>
+                </Card>
+              </Link>
+            )}
 
             <Link href="/settings">
               <Card className="transition-colors hover:bg-accent">

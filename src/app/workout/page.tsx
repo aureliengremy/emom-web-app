@@ -41,19 +41,35 @@ export default function WorkoutPage() {
     }
   }, [timer.status, hasPlannedSets, getSessionPlan, startWorkout, router]);
 
-  // Timer tick
+  // Timer tick (countdown + running)
   useEffect(() => {
-    if (timer.status !== "running") return;
+    if (timer.status !== "running" && timer.status !== "countdown") return;
 
     const interval = setInterval(() => {
       const result = tick();
 
+      // Son quand countdown terminé
+      if (result.countdownComplete) {
+        playStart();
+        return;
+      }
+
       // Son de décompte aux dernières secondes
-      const seconds = useWorkoutStore.getState().timer.secondsRemaining;
-      if (seconds <= 3 && seconds > 0 && lastSecondsRef.current > 3) {
+      const currentTimer = useWorkoutStore.getState().timer;
+
+      // Bip pour countdown
+      if (currentTimer.status === "countdown" && currentTimer.countdownSeconds <= 3) {
         playWarning();
       }
-      lastSecondsRef.current = seconds;
+
+      // Bip pour les dernières secondes du timer
+      if (currentTimer.status === "running") {
+        const seconds = currentTimer.secondsRemaining;
+        if (seconds <= 3 && seconds > 0 && lastSecondsRef.current > 3) {
+          playWarning();
+        }
+        lastSecondsRef.current = seconds;
+      }
 
       if (result.workoutComplete) {
         playComplete();
@@ -66,7 +82,7 @@ export default function WorkoutPage() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timer.status, tick, router, playBeep, playComplete, playWarning]);
+  }, [timer.status, tick, router, playBeep, playComplete, playWarning, playStart]);
 
   // Garder l'écran allumé
   useEffect(() => {
@@ -111,6 +127,33 @@ export default function WorkoutPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  // Écran de countdown avant le début
+  if (timer.status === "countdown") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+        <div className="mb-8 text-center">
+          <h1 className="mb-2 text-2xl font-bold">Prépare-toi !</h1>
+          <p className="text-muted-foreground">
+            {currentSet.exerciseName} - {currentSet.reps} reps × {currentSet.duration} min
+          </p>
+        </div>
+
+        <div className="mb-8">
+          <div className="flex h-48 w-48 items-center justify-center rounded-full bg-primary/20">
+            <span className="text-8xl font-bold text-primary tabular-nums">
+              {timer.countdownSeconds}
+            </span>
+          </div>
+        </div>
+
+        <Button variant="outline" onClick={handleCancel}>
+          <X className="mr-2 h-5 w-5" />
+          Annuler
+        </Button>
       </div>
     );
   }
