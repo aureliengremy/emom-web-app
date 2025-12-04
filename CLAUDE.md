@@ -1,5 +1,27 @@
 # EMOM Web App - Instructions Claude
 
+## RÈGLES IMPORTANTES
+
+1. **Commence par réfléchir au problème**, lis le code pour repérer les fichiers pertinents, et écris un plan dans `task/todo.md`.
+
+2. **Le plan doit contenir une liste de tâches** que tu pourras cocher au fur et à mesure que tu les complètes.
+
+3. **Avant de commencer à travailler**, vérifie avec moi et je validerai le plan.
+
+4. **Ensuite, commence à travailler** sur les tâches, en les marquant comme complètes au fur et à mesure.
+
+5. **À chaque étape**, donne-moi simplement une explication générale des changements que tu fais.
+
+6. **Rends chaque tâche et chaque changement de code aussi simples que possible.** Nous voulons éviter tout changement massif ou complexe. Chaque modification doit impacter le moins de code possible. Tout tourne autour de la simplicité.
+
+7. **Enfin, ajoute une section de revue** dans le fichier `task/todo.md` avec un résumé des changements que tu as effectués et toute autre information pertinente.
+
+8. **NE SOIS PAS PARESSEUX. JAMAIS.** S'il y a un bug, trouve la cause profonde et règle-le. Pas de fixes temporaires. Tu es un développeur, ne sois jamais paresseux.
+
+9. **SIMPLICITÉ ABSOLUE.** Fais que toutes les corrections et changements de code soient aussi simples que possible. Ils ne doivent impacter que le code nécessaire, lié à la tâche, et rien d'autre. L'impact doit être aussi faible que possible. Ton objectif est de ne pas introduire de bugs.
+
+---
+
 ## Description du projet
 
 Application web mobile-first pour entraînements EMOM (Every Minute On the Minute). L'app permet de :
