@@ -5,7 +5,7 @@
 
 // === Constantes ===
 
-export const EMOM_DURATIONS = [4, 6, 8, 10, 12, 14] as const;
+export const EMOM_DURATIONS = [2, 3, 4, 5, 6, 8, 10, 12, 14, 15, 16, 18, 20] as const;
 export type EMOMDuration = (typeof EMOM_DURATIONS)[number];
 
 export const PAUSE_DURATIONS = [60, 90, 120, 180, 300] as const; // secondes

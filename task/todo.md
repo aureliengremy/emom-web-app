@@ -26,7 +26,7 @@
 - [ ] Classification des exercices (haut du corps, bas du corps, core, full body, pull, push, legs...) et donc un filtre pour les exercices par type et difficulté.
 
 ### Timer / Sessions
-- [ ] Plus de durées disponibles dans les sets (par exercice)
+- [x] Plus de durées disponibles dans les sets (2, 3, 4, 5, 6, 8, 10, 12, 14, 15, 16, 18, 20 min)
 - [x] Son pour prévenir des 10 dernières secondes avant le set suivant
 - [x] Lancer le compte à rebours automatiquement lors du repos avant le prochain set
 - [x] Message de validation lors de l'arrêt/annulation d'un workout (en session)
