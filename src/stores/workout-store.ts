@@ -37,6 +37,7 @@ interface TickResult {
   minuteComplete: boolean;
   setComplete: boolean;
   workoutComplete: boolean;
+  pauseCountdown: boolean; // True quand on est en pause entre sets
 }
 
 interface WorkoutState {
@@ -257,6 +258,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
       minuteComplete: false,
       setComplete: false,
       workoutComplete: false,
+      pauseCountdown: false,
     };
 
     // Gestion du countdown initial
@@ -288,6 +290,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
 
     // Gestion de la pause entre sets
     if (timer.isPausingBetweenSets) {
+      result.pauseCountdown = true;
       if (timer.pauseSecondsRemaining > 1) {
         set((state) => ({
           timer: {
@@ -295,6 +298,9 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
             pauseSecondsRemaining: state.timer.pauseSecondsRemaining - 1,
           },
         }));
+      } else {
+        // Pause terminée, démarrer automatiquement le set suivant
+        get().startNextSet();
       }
       return result;
     }
@@ -355,13 +361,12 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
           timer: { ...state.timer, status: "finished" },
         }));
       } else {
-        // Passer en pause entre sets
+        // Passer en pause entre sets (garder status running pour continuer le countdown)
         set((state) => ({
           timer: {
             ...state.timer,
             isPausingBetweenSets: true,
             pauseSecondsRemaining: sessionPlan.pauseDuration,
-            status: "paused",
           },
         }));
       }

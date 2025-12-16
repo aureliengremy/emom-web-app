@@ -29,6 +29,7 @@ export default function WorkoutPage() {
   const { getSessionPlan, clearSession, hasPlannedSets } = useSessionStore();
   const { playBeep, playStart, playComplete, playWarning } = useSound();
   const lastSecondsRef = useRef(60);
+  const lastPauseSecondsRef = useRef(0);
 
   // Démarrer le workout si pas encore commencé
   useEffect(() => {
@@ -63,12 +64,21 @@ export default function WorkoutPage() {
       }
 
       // Bip pour les dernières secondes du timer
-      if (currentTimer.status === "running") {
+      if (currentTimer.status === "running" && !currentTimer.isPausingBetweenSets) {
         const seconds = currentTimer.secondsRemaining;
         if (seconds <= 3 && seconds > 0 && lastSecondsRef.current > 3) {
           playWarning();
         }
         lastSecondsRef.current = seconds;
+      }
+
+      // Bip pour les 10 dernières secondes de pause entre sets
+      if (result.pauseCountdown && currentTimer.isPausingBetweenSets) {
+        const pauseSeconds = currentTimer.pauseSecondsRemaining;
+        if (pauseSeconds <= 10 && pauseSeconds > 0 && pauseSeconds !== lastPauseSecondsRef.current) {
+          playWarning();
+        }
+        lastPauseSecondsRef.current = pauseSeconds;
       }
 
       if (result.workoutComplete) {
@@ -160,6 +170,7 @@ export default function WorkoutPage() {
 
   // Écran de pause entre sets
   if (timer.isPausingBetweenSets) {
+    const nextSet = useWorkoutStore.getState().sessionPlan?.sets[timer.currentSetIndex + 1];
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
         <div className="mb-8 text-center">
@@ -168,23 +179,27 @@ export default function WorkoutPage() {
             Set {timer.currentSetIndex + 1}/{timer.totalSets} terminé
           </h1>
           <p className="text-muted-foreground">
-            Repos avant le prochain set
+            Prochain : {nextSet?.exerciseName}
           </p>
         </div>
 
-        <div className="mb-8">
+        <div className="mb-2">
           <span className="timer-seconds text-primary">
             {timer.pauseSecondsRemaining}
           </span>
         </div>
+        <p className="mb-8 text-sm text-muted-foreground">
+          Démarrage automatique...
+        </p>
 
         <Button
           size="lg"
+          variant="outline"
           onClick={() => useWorkoutStore.getState().startNextSet()}
           className="gap-2"
         >
           <Play className="h-5 w-5" />
-          Lancer le set suivant
+          Passer le repos
         </Button>
       </div>
     );

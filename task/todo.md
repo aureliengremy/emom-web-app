@@ -27,8 +27,8 @@
 
 ### Timer / Sessions
 - [ ] Plus de durées disponibles dans les sets (par exercice)
-- [ ] Son pour prévenir des 10 dernières secondes avant le set suivant
-- [ ] Lancer le compte à rebours automatiquement lors du repos avant le prochain set
+- [x] Son pour prévenir des 10 dernières secondes avant le set suivant
+- [x] Lancer le compte à rebours automatiquement lors du repos avant le prochain set
 - [ ] Message de validation lors de l'arrêt/annulation d'un workout (en session ou dans historique)
 
 ### Fin de workout
