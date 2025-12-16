@@ -29,7 +29,7 @@
 - [ ] Plus de durées disponibles dans les sets (par exercice)
 - [x] Son pour prévenir des 10 dernières secondes avant le set suivant
 - [x] Lancer le compte à rebours automatiquement lors du repos avant le prochain set
-- [ ] Message de validation lors de l'arrêt/annulation d'un workout (en session ou dans historique)
+- [x] Message de validation lors de l'arrêt/annulation d'un workout (en session)
 
 ### Fin de workout
 - [ ] Bouton pour ajouter commentaire et/ou difficulté par exercice à la fin

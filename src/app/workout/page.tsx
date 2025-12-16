@@ -4,11 +4,21 @@
 // Page Workout - Timer EMOM
 // ============================================
 
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TimerCircle } from "@/components/timer/timer-circle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useWorkoutStore } from "@/stores/workout-store";
 import { useSessionStore } from "@/stores/session-store";
 import { useSound } from "@/hooks/use-sound";
@@ -30,6 +40,7 @@ export default function WorkoutPage() {
   const { playBeep, playStart, playComplete, playWarning } = useSound();
   const lastSecondsRef = useRef(60);
   const lastPauseSecondsRef = useRef(0);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Démarrer le workout si pas encore commencé
   useEffect(() => {
@@ -125,11 +136,16 @@ export default function WorkoutPage() {
     }
   }, [timer.status, timer.isPausingBetweenSets, pauseTimer, resumeTimer]);
 
-  const handleCancel = useCallback(() => {
+  const handleCancelConfirm = useCallback(() => {
+    setShowCancelDialog(false);
     cancelWorkout();
     clearSession();
     router.push("/");
   }, [cancelWorkout, clearSession, router]);
+
+  const handleCancelRequest = useCallback(() => {
+    setShowCancelDialog(true);
+  }, []);
 
   const currentSet = getCurrentPlannedSet();
 
@@ -160,7 +176,7 @@ export default function WorkoutPage() {
           </div>
         </div>
 
-        <Button variant="outline" onClick={handleCancel}>
+        <Button variant="outline" onClick={handleCancelRequest}>
           <X className="mr-2 h-5 w-5" />
           Annuler
         </Button>
@@ -209,7 +225,7 @@ export default function WorkoutPage() {
     <div className="no-select flex min-h-screen flex-col bg-background">
       {/* Header */}
       <header className="flex items-center justify-between p-4">
-        <Button variant="ghost" size="icon" onClick={handleCancel}>
+        <Button variant="ghost" size="icon" onClick={handleCancelRequest}>
           <X className="h-6 w-6" />
         </Button>
         <div className="text-center">
@@ -271,6 +287,27 @@ export default function WorkoutPage() {
           </Button>
         </div>
       </footer>
+
+      {/* Dialog de confirmation d'annulation */}
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Arrêter la séance ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ta progression ne sera pas sauvegardée. Es-tu sûr de vouloir arrêter ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuer</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Arrêter
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
