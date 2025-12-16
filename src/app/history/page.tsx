@@ -34,9 +34,9 @@ import {
   Clock,
   Repeat,
   Star,
-  Loader2,
   TrendingUp,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 const RATING_COLORS = {
@@ -131,7 +131,7 @@ export default function HistoryPage() {
     0
   );
 
-  // Afficher un loader pendant le chargement
+  // Afficher un skeleton pendant le chargement
   if (!isInitialized) {
     return (
       <Container wide>
@@ -146,8 +146,64 @@ export default function HistoryPage() {
           </div>
         </Header>
         <Main>
-          <div className="flex min-h-[40vh] items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          {/* Skeleton du chart */}
+          <Card className="mb-6">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-5 w-40" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-9 w-32" />
+                  <Skeleton className="h-9 w-24" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-[200px] w-full" />
+            </CardContent>
+          </Card>
+
+          {/* Skeleton des stats */}
+          <div className="mb-6 grid grid-cols-3 gap-3">
+            {[1, 2, 3].map((i) => (
+              <Card key={i}>
+                <CardContent className="flex flex-col items-center p-3">
+                  <Skeleton className="mb-1 h-6 w-12" />
+                  <Skeleton className="h-3 w-16" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Skeleton des filtres */}
+          <div className="mb-4">
+            <Skeleton className="mb-2 h-4 w-32" />
+            <div className="flex gap-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-6 w-20 rounded-full" />
+              ))}
+            </div>
+          </div>
+
+          {/* Skeleton des workout cards */}
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i}>
+                <CardContent className="p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </div>
+                  <div className="mb-3 space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                  <div className="flex gap-4">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </Main>
       </Container>

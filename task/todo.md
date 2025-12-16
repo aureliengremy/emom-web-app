@@ -39,7 +39,7 @@
 - [x] Filtre jour/semaine/mois pour le chart de progression
 
 ### UX/UI
-- [ ] Loading page d'historique (skeleton)
+- [x] Loading page d'historique (skeleton)
 - [ ] Animation de transition entre les pages
 - [ ] Toast de confirmation après suppression
 - [ ] Pull-to-refresh sur mobile
