@@ -23,6 +23,7 @@ import {
 import {
   getSupabaseWorkouts,
   saveSupabaseWorkout,
+  deleteSupabaseWorkout,
 } from "@/lib/supabase/data-service";
 import { useAuthStore } from "./auth-store";
 
@@ -107,8 +108,14 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   },
 
   deleteWorkoutFromHistory: async (id) => {
-    // Note: Supabase delete not implemented - only local for now
-    await deleteLocalWorkout(id);
+    const user = getAuthUser();
+
+    if (user) {
+      await deleteSupabaseWorkout(id);
+    } else {
+      await deleteLocalWorkout(id);
+    }
+
     set((state) => ({
       workoutHistory: state.workoutHistory.filter((w) => w.id !== id),
     }));
@@ -189,6 +196,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   finishWorkout: async (rating, notes) => {
     const user = getAuthUser();
     const { currentWorkout } = get();
+
     if (!currentWorkout) return;
 
     // Calculer les totaux
@@ -213,9 +221,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
     // Sauvegarder uniquement si connecté (pas en mode invité)
     if (user) {
       try {
-        console.log("Saving workout to Supabase...", finishedWorkout.id);
         await saveSupabaseWorkout(user.id, finishedWorkout);
-        console.log("Workout saved successfully!");
         set((state) => ({
           workoutHistory: [finishedWorkout, ...state.workoutHistory],
           currentWorkout: null,
@@ -234,7 +240,6 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
       }
     } else {
       // Mode invité : ne pas sauvegarder, juste reset
-      console.log("Guest mode - workout not saved");
       set({
         currentWorkout: null,
         sessionPlan: null,

@@ -5,7 +5,7 @@
 // ============================================
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Container, Main } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,7 @@ type AuthMode = "login" | "signup";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     user,
     isLoading,
@@ -29,7 +30,9 @@ export default function LoginPage() {
     signInWithApple,
   } = useAuthStore();
 
-  const [mode, setMode] = useState<AuthMode>("login");
+  // Initialiser le mode depuis l'URL (tab=signup ou tab=login)
+  const initialMode = searchParams.get("tab") === "signup" ? "signup" : "login";
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,6 +40,14 @@ export default function LoginPage() {
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  // Mettre à jour le mode si l'URL change
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "signup" || tab === "login") {
+      setMode(tab);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (isInitialized && user) {

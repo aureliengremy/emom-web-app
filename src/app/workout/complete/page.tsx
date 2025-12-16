@@ -4,7 +4,7 @@
 // Page fin de workout
 // ============================================
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -32,8 +32,14 @@ export default function WorkoutCompletePage() {
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
+  // Redirection si pas de workout en cours
+  useEffect(() => {
+    if (!currentWorkout) {
+      router.push("/");
+    }
+  }, [currentWorkout, router]);
+
   if (!currentWorkout) {
-    router.push("/");
     return null;
   }
 

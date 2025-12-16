@@ -11,6 +11,8 @@ interface ContainerProps {
   padded?: boolean;
   /** Centrer le contenu avec max-width */
   centered?: boolean;
+  /** Largeur étendue pour desktop (max-w-4xl au lieu de max-w-lg) */
+  wide?: boolean;
 }
 
 export function Container({
@@ -18,13 +20,14 @@ export function Container({
   className,
   padded = true,
   centered = true,
+  wide = false,
 }: ContainerProps) {
   return (
     <div
       className={cn(
         "min-h-screen w-full",
         padded && "px-4",
-        centered && "mx-auto max-w-lg",
+        centered && (wide ? "mx-auto max-w-lg md:max-w-4xl" : "mx-auto max-w-lg"),
         className
       )}
     >

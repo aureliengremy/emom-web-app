@@ -4,15 +4,38 @@
 // Page historique des séances
 // ============================================
 
-import { useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { Container, Header, Main } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { VolumeAreaChart } from "@/components/charts/volume-area-chart";
 import { useWorkoutStore } from "@/stores/workout-store";
+import { useAuthStore } from "@/stores/auth-store";
 import { formatDate, formatDuration } from "@/types";
-import { ArrowLeft, Calendar, Clock, Repeat, Star, Loader2 } from "lucide-react";
+import {
+  getUniqueExercises,
+  aggregateVolumeByDay,
+  aggregateVolumeByWeek,
+  filterWorkoutsByExercises,
+} from "@/lib/chart-utils";
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  Repeat,
+  Star,
+  Loader2,
+  TrendingUp,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const RATING_COLORS = {
@@ -27,20 +50,86 @@ const RATING_LABELS = {
   hard: "Difficile",
 };
 
+type Granularity = "day" | "week";
+
 export default function HistoryPage() {
   const { workoutHistory, isLoaded, loadWorkouts } = useWorkoutStore();
+  const { isInitialized, initialize, user } = useAuthStore();
 
-  // Charger les workouts au montage
+  // États pour le chart
+  const [selectedExercise, setSelectedExercise] = useState<string>("");
+  const [granularity, setGranularity] = useState<Granularity>("day");
+
+  // États pour les filtres de la liste
+  const [exerciseFilters, setExerciseFilters] = useState<string[]>([]);
+
+  // Initialiser l'auth puis charger les workouts
   useEffect(() => {
-    if (!isLoaded) {
+    const init = async () => {
+      if (!isInitialized) {
+        await initialize();
+      }
+    };
+    init();
+  }, [isInitialized, initialize]);
+
+  // Charger les workouts quand l'utilisateur change
+  useEffect(() => {
+    if (isInitialized && user) {
       loadWorkouts();
     }
-  }, [isLoaded, loadWorkouts]);
+  }, [isInitialized, user?.id, loadWorkouts]);
+
+  // Extraire les exercices uniques
+  const exercises = useMemo(
+    () => getUniqueExercises(workoutHistory),
+    [workoutHistory]
+  );
+
+  // Sélectionner le premier exercice par défaut
+  useEffect(() => {
+    if (exercises.length > 0 && !selectedExercise) {
+      setSelectedExercise(exercises[0]);
+    }
+  }, [exercises, selectedExercise]);
+
+  // Données pour le chart
+  const chartData = useMemo(() => {
+    if (!selectedExercise) return [];
+    return granularity === "day"
+      ? aggregateVolumeByDay(workoutHistory, selectedExercise)
+      : aggregateVolumeByWeek(workoutHistory, selectedExercise);
+  }, [workoutHistory, selectedExercise, granularity]);
+
+  // Toggle un filtre exercice
+  const toggleExerciseFilter = (exercise: string) => {
+    setExerciseFilters((prev) =>
+      prev.includes(exercise)
+        ? prev.filter((e) => e !== exercise)
+        : [...prev, exercise]
+    );
+  };
+
+  // Trier et filtrer les workouts
+  const sortedHistory = useMemo(() => {
+    const sorted = [...workoutHistory].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    return filterWorkoutsByExercises(sorted, exerciseFilters);
+  }, [workoutHistory, exerciseFilters]);
+
+  // Stats globales
+  const totalWorkouts = workoutHistory.length;
+  const totalReps = workoutHistory.reduce((sum, w) => sum + w.totalReps, 0);
+  const totalDuration = workoutHistory.reduce(
+    (sum, w) => sum + w.totalDuration,
+    0
+  );
 
   // Afficher un loader pendant le chargement
-  if (!isLoaded) {
+  if (!isInitialized) {
     return (
-      <Container>
+      <Container wide>
         <Header>
           <div className="flex items-center gap-2">
             <Link href="/">
@@ -60,21 +149,51 @@ export default function HistoryPage() {
     );
   }
 
-  // Trier par date décroissante
-  const sortedHistory = [...workoutHistory].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-
-  // Stats globales
-  const totalWorkouts = workoutHistory.length;
-  const totalReps = workoutHistory.reduce((sum, w) => sum + w.totalReps, 0);
-  const totalDuration = workoutHistory.reduce(
-    (sum, w) => sum + w.totalDuration,
-    0
-  );
+  // Afficher une invitation à créer un compte si non connecté
+  if (!user) {
+    return (
+      <Container wide>
+        <Header>
+          <div className="flex items-center gap-2">
+            <Link href="/">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <h1 className="text-xl font-bold">Historique</h1>
+          </div>
+        </Header>
+        <Main>
+          <Card className="mx-auto max-w-md">
+            <CardContent className="flex flex-col items-center p-6 text-center">
+              <Calendar className="mb-4 h-12 w-12 text-muted-foreground" />
+              <h2 className="mb-2 text-lg font-semibold">
+                Connecte-toi pour voir ton historique
+              </h2>
+              <p className="mb-6 text-sm text-muted-foreground">
+                Crée un compte gratuit pour sauvegarder tes séances et suivre ta progression au fil du temps.
+              </p>
+              <div className="flex flex-col gap-2 w-full">
+                <Link href="/auth/login?tab=login" className="w-full">
+                  <Button className="w-full">
+                    Se connecter
+                  </Button>
+                </Link>
+                <Link href="/auth/login?tab=signup" className="w-full">
+                  <Button variant="outline" className="w-full">
+                    Créer un compte
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </Main>
+      </Container>
+    );
+  }
 
   return (
-    <Container>
+    <Container wide>
       <Header>
         <div className="flex items-center gap-2">
           <Link href="/">
@@ -87,6 +206,64 @@ export default function HistoryPage() {
       </Header>
 
       <Main>
+        {/* Section Chart */}
+        {totalWorkouts > 0 && exercises.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader className="pb-2">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <TrendingUp className="h-4 w-4" />
+                  Progression du volume
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  {/* Sélecteur d'exercice */}
+                  <Select
+                    value={selectedExercise}
+                    onValueChange={setSelectedExercise}
+                  >
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="Exercice" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {exercises.map((ex) => (
+                        <SelectItem key={ex} value={ex}>
+                          {ex}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Toggle Jour/Semaine */}
+                  <div className="flex rounded-md border">
+                    <Button
+                      variant={granularity === "day" ? "secondary" : "ghost"}
+                      size="sm"
+                      className="rounded-r-none"
+                      onClick={() => setGranularity("day")}
+                    >
+                      Jour
+                    </Button>
+                    <Button
+                      variant={granularity === "week" ? "secondary" : "ghost"}
+                      size="sm"
+                      className="rounded-l-none"
+                      onClick={() => setGranularity("week")}
+                    >
+                      Semaine
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <VolumeAreaChart
+                data={chartData}
+                exerciseName={selectedExercise}
+              />
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stats globales */}
         {totalWorkouts > 0 && (
           <div className="mb-6 grid grid-cols-3 gap-3">
@@ -113,9 +290,40 @@ export default function HistoryPage() {
           </div>
         )}
 
+        {/* Filtres par exercice */}
+        {exercises.length > 0 && (
+          <div className="mb-4">
+            <p className="mb-2 text-sm text-muted-foreground">
+              Filtrer par exercice :
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {exercises.map((ex) => (
+                <Badge
+                  key={ex}
+                  variant={exerciseFilters.includes(ex) ? "default" : "outline"}
+                  className="cursor-pointer transition-colors hover:bg-primary/80"
+                  onClick={() => toggleExerciseFilter(ex)}
+                >
+                  {ex}
+                </Badge>
+              ))}
+              {exerciseFilters.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => setExerciseFilters([])}
+                >
+                  Effacer
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Liste des séances */}
         {sortedHistory.length > 0 ? (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {sortedHistory.map((workout) => (
               <Card key={workout.id}>
                 <CardContent className="p-4">
@@ -175,6 +383,20 @@ export default function HistoryPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        ) : exerciseFilters.length > 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Calendar className="mb-4 h-12 w-12 text-muted-foreground" />
+            <p className="text-muted-foreground">
+              Aucune séance pour ces exercices
+            </p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => setExerciseFilters([])}
+            >
+              Afficher toutes les séances
+            </Button>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-center">
