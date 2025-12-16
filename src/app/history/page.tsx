@@ -25,6 +25,7 @@ import {
   getUniqueExercises,
   aggregateVolumeByDay,
   aggregateVolumeByWeek,
+  aggregateVolumeByMonth,
   filterWorkoutsByExercises,
 } from "@/lib/chart-utils";
 import {
@@ -50,7 +51,7 @@ const RATING_LABELS = {
   hard: "Difficile",
 };
 
-type Granularity = "day" | "week";
+type Granularity = "day" | "week" | "month";
 
 export default function HistoryPage() {
   const { workoutHistory, isLoaded, loadWorkouts } = useWorkoutStore();
@@ -96,9 +97,13 @@ export default function HistoryPage() {
   // Données pour le chart
   const chartData = useMemo(() => {
     if (!selectedExercise) return [];
-    return granularity === "day"
-      ? aggregateVolumeByDay(workoutHistory, selectedExercise)
-      : aggregateVolumeByWeek(workoutHistory, selectedExercise);
+    if (granularity === "month") {
+      return aggregateVolumeByMonth(workoutHistory, selectedExercise);
+    }
+    if (granularity === "week") {
+      return aggregateVolumeByWeek(workoutHistory, selectedExercise);
+    }
+    return aggregateVolumeByDay(workoutHistory, selectedExercise);
   }, [workoutHistory, selectedExercise, granularity]);
 
   // Toggle un filtre exercice
@@ -233,7 +238,7 @@ export default function HistoryPage() {
                     </SelectContent>
                   </Select>
 
-                  {/* Toggle Jour/Semaine */}
+                  {/* Toggle Jour/Semaine/Mois */}
                   <div className="flex rounded-md border">
                     <Button
                       variant={granularity === "day" ? "secondary" : "ghost"}
@@ -246,10 +251,18 @@ export default function HistoryPage() {
                     <Button
                       variant={granularity === "week" ? "secondary" : "ghost"}
                       size="sm"
-                      className="rounded-l-none"
+                      className="rounded-none border-x"
                       onClick={() => setGranularity("week")}
                     >
-                      Semaine
+                      Sem.
+                    </Button>
+                    <Button
+                      variant={granularity === "month" ? "secondary" : "ghost"}
+                      size="sm"
+                      className="rounded-l-none"
+                      onClick={() => setGranularity("month")}
+                    >
+                      Mois
                     </Button>
                   </div>
                 </div>

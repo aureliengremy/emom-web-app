@@ -22,8 +22,8 @@
 
 ### Exercices
 - [ ] Modification des niveaux des exercices
-- [ ] Liste des exercices de base de callisthénie avec niveaux par défaut
-- [ ] Classification des exercices (haut du corps, bas du corps, core, full body)
+- [ ] Liste des exercices de base de callisthénie avec niveaux par défaut (en prenant en compte leurs variantes qui on des diffulcultés différentes). Dans l'idéal, quand je selectionne push up par exemple, je peux choisir le niveau facile, moyen ou difficile dans un select. Cela correspondra à la liste donnée dans le fichier 'exercices.md'.
+- [ ] Classification des exercices (haut du corps, bas du corps, core, full body, pull, push, legs...) et donc un filtre pour les exercices par type et difficulté.
 
 ### Timer / Sessions
 - [ ] Plus de durées disponibles dans les sets (par exercice)
@@ -36,7 +36,7 @@
 - [ ] Animation de fin quand un workout est terminé (confettis)
 
 ### Historique
-- [ ] Filtre jour/semaine/mois pour le chart de progression
+- [x] Filtre jour/semaine/mois pour le chart de progression
 
 ### UX/UI
 - [ ] Loading page d'historique (skeleton)

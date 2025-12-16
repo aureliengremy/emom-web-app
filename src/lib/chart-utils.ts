@@ -2,7 +2,7 @@
 // Utilitaires pour les charts de progression
 // ============================================
 
-import { startOfWeek, format, parseISO } from "date-fns";
+import { startOfWeek, startOfMonth, format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { Workout } from "@/types";
 
@@ -92,6 +92,34 @@ export function aggregateVolumeByWeek(
     .map(([date, volume]) => ({
       date,
       label: `Sem. ${format(parseISO(date), "d MMM", { locale: fr })}`,
+      volume,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * Agrège le volume par mois pour un exercice donné
+ */
+export function aggregateVolumeByMonth(
+  workouts: Workout[],
+  exerciseName: string
+): ChartDataPoint[] {
+  const volumeByMonth = new Map<string, number>();
+
+  workouts.forEach((workout) => {
+    const volume = getExerciseVolumeInWorkout(workout, exerciseName);
+    if (volume > 0) {
+      const monthStart = startOfMonth(parseISO(workout.date));
+      const monthKey = format(monthStart, "yyyy-MM");
+      const existing = volumeByMonth.get(monthKey) || 0;
+      volumeByMonth.set(monthKey, existing + volume);
+    }
+  });
+
+  return Array.from(volumeByMonth.entries())
+    .map(([date, volume]) => ({
+      date,
+      label: format(parseISO(`${date}-01`), "MMM yyyy", { locale: fr }),
       volume,
     }))
     .sort((a, b) => a.date.localeCompare(b.date));
