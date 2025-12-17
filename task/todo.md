@@ -33,7 +33,7 @@
 
 ### Fin de workout
 - [ ] Bouton pour ajouter commentaire et/ou difficulté par exercice à la fin
-- [ ] Animation de fin quand un workout est terminé (confettis)
+- [x] Animation de fin quand un workout est terminé (confettis)
 
 ### Historique
 - [x] Filtre jour/semaine/mois pour le chart de progression

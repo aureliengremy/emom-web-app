@@ -4,9 +4,10 @@
 // Page fin de workout
 // ============================================
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useWorkoutStore } from "@/stores/workout-store";
@@ -32,12 +33,42 @@ export default function WorkoutCompletePage() {
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
+  const hasPlayedConfetti = useRef(false);
+
   // Redirection si pas de workout en cours
   useEffect(() => {
     if (!currentWorkout) {
       router.push("/");
     }
   }, [currentWorkout, router]);
+
+  // Animation confettis au chargement
+  useEffect(() => {
+    if (currentWorkout && !hasPlayedConfetti.current) {
+      hasPlayedConfetti.current = true;
+      // Premier burst
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
+      // Deuxième burst après un court délai
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+        });
+        confetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+        });
+      }, 250);
+    }
+  }, [currentWorkout]);
 
   if (!currentWorkout) {
     return null;
