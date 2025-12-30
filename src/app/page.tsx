@@ -183,7 +183,7 @@ export default function HomePage() {
         )}
 
         {/* Actions */}
-        <section className="mb-32">
+        <section className="mb-32 pb-96">
           <h2 className="mb-4 text-lg font-semibold">Menu</h2>
 
           <div className="space-y-2">
