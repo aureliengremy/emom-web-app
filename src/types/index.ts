@@ -86,6 +86,19 @@ export interface SessionPlan {
   pauseDuration: number; // secondes
 }
 
+// === Saved Sessions ===
+
+export interface SavedSession {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  sets: PlannedSet[];
+  pauseDuration: number; // secondes
+  createdAt: string; // ISO date
+  updatedAt: string; // ISO date
+}
+
 // === Timer ===
 
 export type TimerStatus = "idle" | "countdown" | "running" | "paused" | "finished";

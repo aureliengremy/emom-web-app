@@ -4,7 +4,7 @@
 // ============================================
 
 import { createClient } from "./client";
-import type { Exercise, Workout, UserSettings } from "@/types";
+import type { Exercise, Workout, UserSettings, SavedSession } from "@/types";
 
 // ============================================
 // Exercises
@@ -256,5 +256,95 @@ function mapDbSettingsToSettings(db: DbSettings): UserSettings {
     defaultPauseDuration: db.default_pause_duration,
     defaultEMOMDuration: db.default_emom_duration,
     hasCompletedSetup: db.has_completed_setup,
+  };
+}
+
+// ============================================
+// Saved Sessions
+// ============================================
+
+export async function getSavedSessions(userId: string): Promise<SavedSession[]> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("sessions")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching sessions:", error);
+    return [];
+  }
+
+  return (data || []).map(mapDbSavedSessionToSavedSession);
+}
+
+export async function saveSavedSession(
+  userId: string,
+  session: SavedSession
+): Promise<void> {
+  const supabase = createClient();
+
+  const dbSession = {
+    id: session.id,
+    user_id: userId,
+    name: session.name,
+    description: session.description,
+    sets: session.sets,
+    pause_duration: session.pauseDuration,
+    created_at: session.createdAt,
+    updated_at: session.updatedAt,
+  };
+
+  const { error } = await supabase
+    .from("sessions")
+    .upsert(dbSession, { onConflict: "id" });
+
+  if (error) {
+    console.error("Error saving session:", error);
+    throw error;
+  }
+}
+
+export async function deleteSavedSession(sessionId: string): Promise<void> {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("sessions")
+    .delete()
+    .eq("id", sessionId);
+
+  if (error) {
+    console.error("Error deleting session:", error);
+    throw error;
+  }
+}
+
+// ============================================
+// Mappers DB → App Types (Saved Sessions)
+// ============================================
+
+interface DbSavedSession {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  sets: SavedSession["sets"];
+  pause_duration: number;
+  created_at: string;
+  updated_at: string;
+}
+
+function mapDbSavedSessionToSavedSession(db: DbSavedSession): SavedSession {
+  return {
+    id: db.id,
+    userId: db.user_id,
+    name: db.name,
+    description: db.description ?? undefined,
+    sets: db.sets,
+    pauseDuration: db.pause_duration,
+    createdAt: db.created_at,
+    updatedAt: db.updated_at,
   };
 }
