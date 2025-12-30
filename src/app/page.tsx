@@ -4,7 +4,7 @@
 // Page d'accueil - Simplifiée
 // ============================================
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Container, Header, Main } from "@/components/layout/container";
@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useExerciseStore } from "@/stores/exercise-store";
 import { useSessionStore } from "@/stores/session-store";
 import { useAuthStore } from "@/stores/auth-store";
+import type { SavedSession } from "@/types";
 import {
   Play,
   Dumbbell,
@@ -26,6 +27,10 @@ import {
   User,
   Loader2,
   Lock,
+  Bookmark,
+  Save,
+  Zap,
+  Clock,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -54,8 +59,17 @@ export default function HomePage() {
   }, [hasCheckedAuth, isInitialized, user, router]);
 
   const exercises = useExerciseStore((s) => s.exercises);
-  const { plannedSets, addSet, clearSession } = useSessionStore();
+  const { plannedSets, addSet, clearSession, savedSessions, loadSessionPlan, loadSavedSessions } = useSessionStore();
   const [configSetId, setConfigSetId] = useState<string | null>(null);
+  const hasLoadedSessionsRef = useRef(false);
+
+  // Charger les sessions sauvegardées
+  useEffect(() => {
+    if (isInitialized && user && !hasLoadedSessionsRef.current) {
+      hasLoadedSessionsRef.current = true;
+      loadSavedSessions(user.id);
+    }
+  }, [isInitialized, user, loadSavedSessions]);
 
   const isGuest = !user;
 
@@ -76,18 +90,18 @@ export default function HomePage() {
     ? plannedSets.find((s) => s.id === configSetId) ?? null
     : null;
 
-  const handleQuickStart = (exerciseId: string) => {
-    const exercise = exercises.find((e) => e.id === exerciseId);
-    if (exercise) {
-      addSet(exercise);
-    }
+  const handleStartWorkout = () => {
+    router.push("/workout");
   };
 
-  const handleStartWorkout = () => {
-    if (plannedSets.length === 0 && exercises.length > 0) {
-      addSet(exercises[0]);
-    }
-    router.push("/workout");
+  const handleLoadSession = (session: SavedSession) => {
+    loadSessionPlan(session);
+  };
+
+  const formatDuration = (pauseDuration: number, sets: number) => {
+    if (sets === 0) return "0 min";
+    const totalMinutes = sets * 10 + Math.floor((pauseDuration * (sets - 1)) / 60);
+    return `${totalMinutes} min`;
   };
 
   return (
@@ -124,86 +138,44 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Section Lancement Rapide */}
-        <section className="mb-8">
-          <h2 className="mb-4 text-lg font-semibold">Lancement rapide</h2>
-
-          {exercises.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3">
-              {exercises.slice(0, 4).map((exercise) => {
-                const isSelected = plannedSets.some(
-                  (s) => s.exerciseId === exercise.id
-                );
-                return (
-                  <button
-                    key={exercise.id}
-                    onClick={() => handleQuickStart(exercise.id)}
-                    className={`flex flex-col items-start rounded-xl border-2 p-4 text-left transition-all ${
-                      isSelected
-                        ? "border-primary bg-primary/10"
-                        : "border-border bg-card hover:border-primary/50"
-                    }`}
-                  >
-                    <span className="mb-1 font-semibold">{exercise.name}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {exercise.currentEMOM.reps} reps × {exercise.currentEMOM.duration}′
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center py-8 text-center">
-                <Dumbbell className="mb-3 h-10 w-10 text-muted-foreground" />
-                <p className="text-muted-foreground">
-                  Aucun exercice configuré
-                </p>
-                <Link href="/exercises" className="mt-3">
-                  <Button variant="outline" size="sm">
-                    Ajouter un exercice
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
-        </section>
-
-        {/* Séance en cours */}
-        {plannedSets.length > 0 && (
-          <section className="mb-8">
+        {/* Section Accès rapide - 4 dernières sessions */}
+        {!isGuest && savedSessions.length > 0 && (
+          <section className="mb-6">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Séance prévue</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => clearSession()}
-                className="text-muted-foreground"
-              >
-                <X className="mr-1 h-4 w-4" />
-                Effacer
-              </Button>
+              <h2 className="flex items-center gap-2 text-lg font-semibold">
+                <Zap className="h-5 w-5" />
+                Accès rapide
+              </h2>
+              <Link href="/sessions">
+                <Button variant="ghost" size="sm">
+                  Voir tout
+                </Button>
+              </Link>
             </div>
-
-            <div className="space-y-2">
-              {plannedSets.map((set, index) => (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {savedSessions.slice(0, 4).map((session) => (
                 <button
-                  key={set.id}
-                  onClick={() => setConfigSetId(set.id)}
-                  className="flex w-full items-center justify-between rounded-lg bg-card px-4 py-3 text-left transition-colors hover:bg-accent"
+                  key={session.id}
+                  onClick={() => handleLoadSession(session)}
+                  className="flex items-center justify-between rounded-lg border bg-card p-3 text-left transition-colors hover:bg-accent"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                      {index + 1}
-                    </span>
-                    <div>
-                      <span className="font-medium">{set.exerciseName}</span>
-                      <p className="text-sm text-muted-foreground">
-                        {set.reps} reps × {set.duration} min
-                      </p>
+                  <div className="flex-1">
+                    <p className="font-medium">{session.name}</p>
+                    <div className="mt-1 flex gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Dumbbell className="h-3 w-3" />
+                        {session.sets.length}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {formatDuration(
+                          session.pauseDuration,
+                          session.sets.length
+                        )}
+                      </span>
                     </div>
                   </div>
-                  <Settings2 className="h-5 w-5 text-muted-foreground" />
+                  <Play className="h-4 w-4 text-muted-foreground" />
                 </button>
               ))}
             </div>
@@ -226,6 +198,25 @@ export default function HomePage() {
                       <p className="font-medium">Mes exercices</p>
                       <p className="text-sm text-muted-foreground">
                         Gérer et configurer
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/sessions">
+              <Card className="transition-colors hover:bg-accent">
+                <CardContent className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
+                      <Bookmark className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Mes sessions</p>
+                      <p className="text-sm text-muted-foreground">
+                        {savedSessions.length} session{savedSessions.length > 1 ? "s" : ""} sauvegardée{savedSessions.length > 1 ? "s" : ""}
                       </p>
                     </div>
                   </div>
@@ -294,20 +285,65 @@ export default function HomePage() {
         </section>
       </Main>
 
-      {/* Bouton flottant */}
+      {/* Boutons flottants */}
       <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background to-transparent pb-6 pt-8">
-        <div className="mx-auto max-w-lg px-4">
-          <Button
-            size="lg"
-            className="w-full gap-2 text-lg"
-            onClick={handleStartWorkout}
-            disabled={exercises.length === 0}
-          >
-            <Play className="h-5 w-5" />
-            {plannedSets.length > 0
-              ? `Démarrer (${plannedSets.length} set${plannedSets.length > 1 ? "s" : ""})`
-              : "Session rapide"}
-          </Button>
+        <div className="mx-auto max-w-lg space-y-3 px-4">
+          {plannedSets.length > 0 ? (
+            <>
+              <Button
+                size="lg"
+                className="w-full gap-2 text-lg"
+                onClick={handleStartWorkout}
+              >
+                <Play className="h-5 w-5" />
+                Démarrer ({plannedSets.length} set{plannedSets.length > 1 ? "s" : ""})
+              </Button>
+              
+              {/* Résumé de la session */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold">Session chargée</h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearSession}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {plannedSets.map((set) => (
+                        <div
+                          key={set.id}
+                          className="flex items-center justify-between rounded-md bg-muted/50 p-2 text-sm"
+                        >
+                          <span className="font-medium">{set.exerciseName}</span>
+                          <span className="text-muted-foreground">
+                            {set.reps} reps × {set.duration} min
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <Link href="/sessions/create" className="block">
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full gap-2"
+                disabled={!user}
+              >
+                <Save className="h-5 w-5" />
+                Créer sessions
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 
