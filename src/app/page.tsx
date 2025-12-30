@@ -22,6 +22,7 @@ import {
   History,
   Settings,
   ChevronRight,
+  ChevronDown,
   Settings2,
   X,
   User,
@@ -61,6 +62,7 @@ export default function HomePage() {
   const exercises = useExerciseStore((s) => s.exercises);
   const { plannedSets, addSet, clearSession, savedSessions, loadSessionPlan, loadSavedSessions } = useSessionStore();
   const [configSetId, setConfigSetId] = useState<string | null>(null);
+  const [isSessionSummaryExpanded, setIsSessionSummaryExpanded] = useState(false);
   const hasLoadedSessionsRef = useRef(false);
 
   // Charger les sessions sauvegardées
@@ -303,30 +305,47 @@ export default function HomePage() {
               <Card>
                 <CardContent className="p-4">
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold">Session chargée</h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearSession}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      {plannedSets.map((set) => (
-                        <div
-                          key={set.id}
-                          className="flex items-center justify-between rounded-md bg-muted/50 p-2 text-sm"
+                    <button
+                      onClick={() => setIsSessionSummaryExpanded(!isSessionSummaryExpanded)}
+                      className="flex w-full items-center justify-between"
+                    >
+                      <h3 className="text-sm font-semibold">
+                        Session chargée ({plannedSets.length} exercice{plannedSets.length > 1 ? "s" : ""})
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        {isSessionSummaryExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            clearSession();
+                          }}
                         >
-                          <span className="font-medium">{set.exerciseName}</span>
-                          <span className="text-muted-foreground">
-                            {set.reps} reps × {set.duration} min
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </button>
+                    
+                    {isSessionSummaryExpanded && (
+                      <div className="space-y-2">
+                        {plannedSets.map((set) => (
+                          <div
+                            key={set.id}
+                            className="flex items-center justify-between rounded-md bg-muted/50 p-2 text-sm"
+                          >
+                            <span className="font-medium">{set.exerciseName}</span>
+                            <span className="text-muted-foreground">
+                              {set.reps} reps × {set.duration} min
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
