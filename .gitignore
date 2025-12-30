@@ -43,3 +43,7 @@ next-env.d.ts
 
 .claude/
 screenshots/
+
+# Informational and junk data files
+exercices.md
+seed-workouts.sql
