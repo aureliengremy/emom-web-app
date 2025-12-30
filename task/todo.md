@@ -30,6 +30,14 @@
 - [x] Son pour prévenir des 10 dernières secondes avant le set suivant
 - [x] Lancer le compte à rebours automatiquement lors du repos avant le prochain set
 - [x] Message de validation lors de l'arrêt/annulation d'un workout (en session)
+- [x] Ajout d'un bouton "Créer sessions" à côté de celui "Session rapide"
+- [x] Ajouter un menu "Mes sessions" qui permettrait d'avoir les sessions créées
+- [x] Revoir "Session rapide" car on ne peut pas ajouter les exercices ajoutés et ça ne semble pas très utile finalement (donc peut-être revoir si la section "Lancement rapide" est toujours utile)
+  - [x] Section "Lancement rapide" supprimée
+  - [x] Dialog "Créer sessions" transformé en constructeur complet avec liste d'exercices
+- [x] Dans la création de session, permettre la modification des séries par exercice (reps, durée, poids)
+- [x] Dans la création de session, réduire la hauteur de la liste d'exercices pour toujours avoir accès au bouton sauvegarder
+- [x] Dans "Mes sessions", ajouter la possibilité de modifier les sessions existantes
 
 ### Fin de workout
 - [ ] Bouton pour ajouter commentaire et/ou difficulté par exercice à la fin
