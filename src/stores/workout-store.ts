@@ -5,6 +5,7 @@
 // ============================================
 
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import type {
   Workout,
   WorkoutSet,
@@ -13,6 +14,7 @@ import type {
   PlannedSet,
   TimerState,
   WorkoutRating,
+  SetFeedback,
 } from "@/types";
 import { generateId } from "@/types";
 import {
@@ -60,6 +62,7 @@ interface WorkoutState {
   startWorkout: (plan: SessionPlan) => void;
   cancelWorkout: () => void;
   finishWorkout: (rating?: WorkoutRating, notes?: string) => Promise<void>;
+  updateSetFeedback: (setId: string, feedback: SetFeedback) => void;
 
   // Actions - Timer
   tick: () => TickResult;
@@ -87,7 +90,9 @@ const INITIAL_TIMER: TimerState = {
   countdownSeconds: 10,
 };
 
-export const useWorkoutStore = create<WorkoutState>((set, get) => ({
+export const useWorkoutStore = create<WorkoutState>()(
+  devtools(
+    (set, get) => ({
   workoutHistory: [],
   isLoaded: false,
   currentWorkout: null,
@@ -247,6 +252,19 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
         timer: INITIAL_TIMER,
       });
     }
+  },
+
+  updateSetFeedback: (setId, feedback) => {
+    set((state) => ({
+      currentWorkout: state.currentWorkout
+        ? {
+            ...state.currentWorkout,
+            sets: state.currentWorkout.sets.map((s) =>
+              s.id === setId ? { ...s, feedback } : s
+            ),
+          }
+        : null,
+    }));
   },
 
   // === Timer ===
@@ -491,4 +509,7 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   getWorkoutById: (id) => {
     return get().workoutHistory.find((w) => w.id === id);
   },
-}));
+    }),
+    { name: "WorkoutStore", enabled: process.env.NODE_ENV === "development" }
+  )
+);

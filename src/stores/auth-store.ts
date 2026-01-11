@@ -5,6 +5,7 @@
 // ============================================
 
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import { createClient } from "@/lib/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -23,7 +24,9 @@ interface AuthState {
   signOut: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>()(
+  devtools(
+    (set, get) => ({
   user: null,
   session: null,
   isLoading: false,
@@ -162,4 +165,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isLoading: false,
     });
   },
-}));
+    }),
+    { name: "AuthStore", enabled: process.env.NODE_ENV === "development" }
+  )
+);

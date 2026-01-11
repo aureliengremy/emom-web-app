@@ -5,6 +5,7 @@
 // ============================================
 
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import type { Exercise } from "@/types";
 import { generateId } from "@/types";
 import {
@@ -51,7 +52,9 @@ function getAuthUser() {
   return useAuthStore.getState().user;
 }
 
-export const useExerciseStore = create<ExerciseState>((set, get) => ({
+export const useExerciseStore = create<ExerciseState>()(
+  devtools(
+    (set, get) => ({
   exercises: [],
   isLoaded: false,
 
@@ -59,8 +62,8 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
     const user = getAuthUser();
 
     if (user) {
-      // Mode connecté : charger depuis Supabase
-      const exercises = await getSupabaseExercises(user.id);
+      // Mode connecté : charger depuis Supabase (RLS gère le filtrage)
+      const exercises = await getSupabaseExercises();
       set({ exercises, isLoaded: true });
     } else {
       // Mode local : charger depuis IndexedDB
@@ -69,21 +72,23 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
     }
   },
 
+  // Initialise les présets pour le mode local (IndexedDB) uniquement
+  // En mode Supabase, les présets sont déjà en DB (user_id = NULL)
   initializePresets: async () => {
     const user = getAuthUser();
 
-    let existing: Exercise[];
+    // En mode Supabase, les présets sont déjà en DB - juste charger
     if (user) {
-      existing = await getSupabaseExercises(user.id);
-    } else {
-      existing = await getLocalExercises();
+      const exercises = await getSupabaseExercises();
+      set({ exercises, isLoaded: true });
+      return;
     }
 
-    // Vérifier si les présets existent déjà
+    // Mode local : créer les présets manquants dans IndexedDB
+    const existing = await getLocalExercises();
     const existingIds = new Set(existing.map((e) => e.id));
-    const presetsToCreate = PRESET_EXERCISES.filter(
-      (p) => !existingIds.has(p.id)
-    );
+
+    const presetsToCreate = PRESET_EXERCISES.filter((p) => !existingIds.has(p.id));
 
     if (presetsToCreate.length === 0) {
       set({ exercises: existing, isLoaded: true });
@@ -93,22 +98,21 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
     const now = new Date().toISOString();
     const newExercises: Exercise[] = presetsToCreate.map((preset) => ({
       id: preset.id,
-      name: preset.name,
+      name: preset.nameFr,
+      nameFr: preset.nameFr,
+      nameEn: preset.nameEn,
       type: "preset" as const,
       category: preset.category,
+      family: preset.family,
+      difficulty: preset.difficulty,
       currentMax: preset.defaultMax,
       currentEMOM: calculateRecommendedEMOM(preset.id, preset.defaultMax),
       lastTested: now,
       createdAt: now,
     }));
 
-    // Sauvegarder en base
     for (const exercise of newExercises) {
-      if (user) {
-        await saveSupabaseExercise(user.id, exercise);
-      } else {
-        await saveLocalExercise(exercise);
-      }
+      await saveLocalExercise(exercise);
     }
 
     const allExercises = [...existing, ...newExercises];
@@ -124,6 +128,8 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
     const exercise: Exercise = {
       id,
       name: data.name,
+      nameFr: data.name, // Pour les custom, même nom dans les deux langues par défaut
+      nameEn: data.name,
       type: "custom",
       category: data.category,
       currentMax: data.currentMax,
@@ -231,4 +237,7 @@ export const useExerciseStore = create<ExerciseState>((set, get) => ({
   getCustomExercises: () => {
     return get().exercises.filter((e) => e.type === "custom");
   },
-}));
+    }),
+    { name: "ExerciseStore", enabled: process.env.NODE_ENV === "development" }
+  )
+);

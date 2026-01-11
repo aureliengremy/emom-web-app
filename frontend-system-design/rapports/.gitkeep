@@ -1,0 +1,6 @@
+# Ce dossier contient les rapports générés par Frontend Architect
+# Les rapports sont générés automatiquement par les commandes :
+# - /audit → audit-YYYY-MM-DD.md
+# - /scaffold → scaffold-YYYY-MM-DD.md
+# - /checklist update → checklist-update-YYYY-MM-DD.md
+# - /report → report-[nom]-YYYY-MM-DD.md

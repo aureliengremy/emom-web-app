@@ -5,6 +5,7 @@
 // ============================================
 
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import type { PlannedSet, SessionPlan, Exercise, SavedSession } from "@/types";
 import { generateId } from "@/types";
 import {
@@ -43,7 +44,9 @@ interface SessionState {
   hasPlannedSets: () => boolean;
 }
 
-export const useSessionStore = create<SessionState>((set, get) => ({
+export const useSessionStore = create<SessionState>()(
+  devtools(
+    (set, get) => ({
   plannedSets: [],
   pauseDuration: 120, // 2 minutes par défaut
   savedSessions: [],
@@ -208,4 +211,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   hasPlannedSets: () => {
     return get().plannedSets.length > 0;
   },
-}));
+    }),
+    { name: "SessionStore", enabled: process.env.NODE_ENV === "development" }
+  )
+);

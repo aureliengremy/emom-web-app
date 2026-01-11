@@ -5,6 +5,7 @@
 // ============================================
 
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import type { UserSettings } from "@/types";
 import {
   getSettings as getLocalSettings,
@@ -34,6 +35,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   defaultPauseDuration: 120,
   defaultEMOMDuration: 10,
   hasCompletedSetup: false,
+  language: "fr",
 };
 
 // Helper pour vérifier si l'utilisateur est connecté
@@ -41,7 +43,9 @@ function getAuthUser() {
   return useAuthStore.getState().user;
 }
 
-export const useSettingsStore = create<SettingsState>((set, get) => ({
+export const useSettingsStore = create<SettingsState>()(
+  devtools(
+    (set, get) => ({
   settings: DEFAULT_SETTINGS,
   isLoaded: false,
 
@@ -78,4 +82,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     await resetAllData();
     set({ settings: DEFAULT_SETTINGS });
   },
-}));
+    }),
+    { name: "SettingsStore", enabled: process.env.NODE_ENV === "development" }
+  )
+);
