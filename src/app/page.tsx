@@ -36,28 +36,19 @@ import {
 
 export default function HomePage() {
   const router = useRouter();
-  const { user, isInitialized, initialize } = useAuthStore();
-  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
-
-  // Initialiser l'auth et vérifier si l'utilisateur doit se connecter
-  useEffect(() => {
-    const checkAuth = async () => {
-      await initialize();
-      setHasCheckedAuth(true);
-    };
-    checkAuth();
-  }, [initialize]);
+  const { user, isInitialized } = useAuthStore();
 
   // Rediriger vers login si pas encore vu la page de login
+  // (l'auth est déjà initialisée par Providers)
   useEffect(() => {
-    if (hasCheckedAuth && isInitialized && !user) {
+    if (isInitialized && !user) {
       // Vérifier si l'utilisateur a déjà choisi de continuer sans compte
       const guestMode = sessionStorage.getItem("emom-guest-mode");
       if (!guestMode) {
         router.push("/auth/login");
       }
     }
-  }, [hasCheckedAuth, isInitialized, user, router]);
+  }, [isInitialized, user, router]);
 
   const exercises = useExerciseStore((s) => s.exercises);
   const { plannedSets, addSet, clearSession, savedSessions, loadSessionPlan, loadSavedSessions } = useSessionStore();
@@ -76,7 +67,9 @@ export default function HomePage() {
   const isGuest = !user;
 
   // Afficher un loader pendant l'initialisation
-  if (!hasCheckedAuth || !isInitialized) {
+  // (Note: Providers gère déjà le loading principal, mais on garde celui-ci
+  // pour éviter un flash si isInitialized passe à true après le render)
+  if (!isInitialized) {
     return (
       <Container>
         <Main>

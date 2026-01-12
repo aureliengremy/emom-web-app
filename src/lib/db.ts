@@ -69,6 +69,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   defaultPauseDuration: 120,
   defaultEMOMDuration: 10,
   hasCompletedSetup: false,
+  language: "fr",
 };
 
 export async function getSettings(): Promise<UserSettings> {

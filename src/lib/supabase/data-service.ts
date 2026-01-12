@@ -10,13 +10,13 @@ import type { Exercise, Workout, UserSettings, SavedSession } from "@/types";
 // Exercises
 // ============================================
 
-export async function getSupabaseExercises(userId: string): Promise<Exercise[]> {
+export async function getSupabaseExercises(): Promise<Exercise[]> {
   const supabase = createClient();
 
+  // RLS gère le filtrage : présets (user_id NULL) + exercices de l'utilisateur
   const { data, error } = await supabase
     .from("exercises")
     .select("*")
-    .eq("user_id", userId)
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -37,8 +37,12 @@ export async function saveSupabaseExercise(
     id: exercise.id,
     user_id: userId,
     name: exercise.name,
+    name_fr: exercise.nameFr ?? null,
+    name_en: exercise.nameEn ?? null,
     type: exercise.type,
     category: exercise.category,
+    family: exercise.family,
+    difficulty: exercise.difficulty,
     current_max: exercise.currentMax,
     current_emom: exercise.currentEMOM,
     last_tested: exercise.lastTested,
@@ -173,6 +177,7 @@ export async function saveSupabaseSettings(
     default_pause_duration: settings.defaultPauseDuration,
     default_emom_duration: settings.defaultEMOMDuration,
     has_completed_setup: settings.hasCompletedSetup,
+    language: settings.language,
     updated_at: new Date().toISOString(),
   };
 
@@ -194,8 +199,12 @@ interface DbExercise {
   id: string;
   user_id: string;
   name: string;
+  name_fr: string | null;
+  name_en: string | null;
   type: string;
   category: string;
+  family: string | null;
+  difficulty: string | null;
   current_max: number;
   current_emom: Exercise["currentEMOM"];
   last_tested: string;
@@ -206,8 +215,12 @@ function mapDbExerciseToExercise(db: DbExercise): Exercise {
   return {
     id: db.id,
     name: db.name,
+    nameFr: db.name_fr ?? undefined,
+    nameEn: db.name_en ?? undefined,
     type: db.type as Exercise["type"],
     category: db.category as Exercise["category"],
+    family: db.family as Exercise["family"],
+    difficulty: db.difficulty as Exercise["difficulty"],
     currentMax: db.current_max,
     currentEMOM: db.current_emom,
     lastTested: db.last_tested,
@@ -247,6 +260,7 @@ interface DbSettings {
   default_pause_duration: number;
   default_emom_duration: number;
   has_completed_setup: boolean;
+  language?: string;
 }
 
 function mapDbSettingsToSettings(db: DbSettings): UserSettings {
@@ -256,6 +270,7 @@ function mapDbSettingsToSettings(db: DbSettings): UserSettings {
     defaultPauseDuration: db.default_pause_duration,
     defaultEMOMDuration: db.default_emom_duration,
     hasCompletedSetup: db.has_completed_setup,
+    language: (db.language as UserSettings["language"]) ?? "fr",
   };
 }
 

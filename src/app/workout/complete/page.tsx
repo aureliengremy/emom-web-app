@@ -14,7 +14,7 @@ import { useWorkoutStore } from "@/stores/workout-store";
 import { useSessionStore } from "@/stores/session-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { formatDuration, type WorkoutRating } from "@/types";
-import { Trophy, Clock, Repeat, Home, AlertCircle } from "lucide-react";
+import { Trophy, Clock, Repeat, Home, AlertCircle, ChevronDown, ChevronRight, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const RATING_OPTIONS: { value: WorkoutRating; emoji: string; label: string }[] = [
@@ -25,13 +25,14 @@ const RATING_OPTIONS: { value: WorkoutRating; emoji: string; label: string }[] =
 
 export default function WorkoutCompletePage() {
   const router = useRouter();
-  const { currentWorkout, finishWorkout } = useWorkoutStore();
+  const { currentWorkout, finishWorkout, updateSetFeedback } = useWorkoutStore();
   const { clearSession } = useSessionStore();
   const { user } = useAuthStore();
   const isGuest = !user;
   const [selectedRating, setSelectedRating] = useState<WorkoutRating | null>(null);
   const [notes, setNotes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [expandedSetId, setExpandedSetId] = useState<string | null>(null);
 
   const hasPlayedConfetti = useRef(false);
 
@@ -46,13 +47,11 @@ export default function WorkoutCompletePage() {
   useEffect(() => {
     if (currentWorkout && !hasPlayedConfetti.current) {
       hasPlayedConfetti.current = true;
-      // Premier burst
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
       });
-      // Deuxième burst après un court délai
       setTimeout(() => {
         confetti({
           particleCount: 50,
@@ -82,6 +81,22 @@ export default function WorkoutCompletePage() {
   );
   const setsCompleted = currentWorkout.sets.filter((s) => s.completed).length;
 
+  const handleSetRating = (setId: string, rating: WorkoutRating) => {
+    const set = currentWorkout.sets.find((s) => s.id === setId);
+    updateSetFeedback(setId, {
+      ...set?.feedback,
+      rating,
+    });
+  };
+
+  const handleSetComment = (setId: string, comment: string) => {
+    const set = currentWorkout.sets.find((s) => s.id === setId);
+    updateSetFeedback(setId, {
+      ...set?.feedback,
+      comment: comment || undefined,
+    });
+  };
+
   const handleFinish = async () => {
     setIsSaving(true);
     try {
@@ -90,14 +105,17 @@ export default function WorkoutCompletePage() {
       router.push("/");
     } catch (error) {
       console.error("Erreur sauvegarde workout:", error);
-      // Même en cas d'erreur, on retourne à l'accueil
       clearSession();
       router.push("/");
     }
   };
 
+  const toggleSetExpand = (setId: string) => {
+    setExpandedSetId(expandedSetId === setId ? null : setId);
+  };
+
   return (
-    <div className="flex min-h-screen flex-col bg-background p-4">
+    <div className="flex min-h-screen flex-col bg-background p-4 pb-32">
       {/* Header */}
       <div className="mb-8 text-center">
         <Trophy className="mx-auto mb-4 h-16 w-16 text-primary" />
@@ -130,25 +148,6 @@ export default function WorkoutCompletePage() {
         </Card>
       </div>
 
-      {/* Détail des sets */}
-      <div className="mx-auto mb-8 w-full max-w-lg">
-        <h2 className="mb-3 text-lg font-semibold">Détail</h2>
-        <div className="flex flex-col gap-2">
-          {currentWorkout.sets.map((set, index) => (
-            <Card key={set.id}>
-              <CardContent className="flex items-center justify-between p-3">
-                <span className="font-medium">
-                  {index + 1}. {set.exerciseName}
-                </span>
-                <span className="text-muted-foreground">
-                  {set.totalReps} reps en {formatDuration(set.actualDuration)}
-                </span>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
       {/* Message mode invité */}
       {isGuest && (
         <div className="mx-auto mb-6 w-full max-w-lg rounded-lg bg-amber-500/10 p-4">
@@ -167,10 +166,102 @@ export default function WorkoutCompletePage() {
         </div>
       )}
 
-      {/* Rating - uniquement pour les utilisateurs connectés */}
+      {/* Feedback par exercice - uniquement pour utilisateurs connectés */}
       {!isGuest && (
         <div className="mx-auto mb-6 w-full max-w-lg">
-          <h2 className="mb-3 text-lg font-semibold">Comment c&apos;était ?</h2>
+          <h2 className="mb-3 text-lg font-semibold">Feedback par exercice</h2>
+          <div className="flex flex-col gap-2">
+            {currentWorkout.sets.map((set, index) => {
+              const isExpanded = expandedSetId === set.id;
+              const hasFeedback = set.feedback?.rating || set.feedback?.comment;
+
+              return (
+                <Card key={set.id}>
+                  <CardContent className="p-0">
+                    {/* En-tête cliquable */}
+                    <button
+                      onClick={() => toggleSetExpand(set.id)}
+                      className="flex w-full items-center justify-between p-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">
+                          {index + 1}. {set.exerciseName}
+                        </span>
+                        {hasFeedback && (
+                          <span className="text-xs text-primary">
+                            {set.feedback?.rating && RATING_OPTIONS.find(r => r.value === set.feedback?.rating)?.emoji}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">
+                          {set.totalReps} reps
+                        </span>
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Zone de feedback */}
+                    {isExpanded && (
+                      <div className="border-t px-3 pb-3 pt-3">
+                        {/* Rating par set */}
+                        <div className="mb-3">
+                          <span className="mb-2 block text-xs text-muted-foreground">
+                            Ressenti
+                          </span>
+                          <div className="flex justify-center gap-3">
+                            {RATING_OPTIONS.map((option) => (
+                              <button
+                                key={option.value}
+                                onClick={() => handleSetRating(set.id, option.value)}
+                                className={cn(
+                                  "flex flex-col items-center gap-1 rounded-lg p-2 transition-all",
+                                  set.feedback?.rating === option.value
+                                    ? "bg-primary/20 ring-1 ring-primary"
+                                    : "bg-muted/50 hover:bg-muted"
+                                )}
+                              >
+                                <span className="text-xl">{option.emoji}</span>
+                                <span className="text-[10px]">{option.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Commentaire par set */}
+                        <div>
+                          <span className="mb-2 block text-xs text-muted-foreground">
+                            Commentaire (optionnel)
+                          </span>
+                          <div className="relative">
+                            <MessageSquare className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <input
+                              type="text"
+                              value={set.feedback?.comment || ""}
+                              onChange={(e) => handleSetComment(set.id, e.target.value)}
+                              placeholder="Ex: Forme parfaite, fatigue à la fin..."
+                              className="w-full rounded-lg bg-muted/50 py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Rating global - uniquement pour les utilisateurs connectés */}
+      {!isGuest && (
+        <div className="mx-auto mb-6 w-full max-w-lg">
+          <h2 className="mb-3 text-lg font-semibold">Ressenti global</h2>
           <div className="flex justify-center gap-4">
             {RATING_OPTIONS.map((option) => (
               <button
@@ -191,31 +282,33 @@ export default function WorkoutCompletePage() {
         </div>
       )}
 
-      {/* Notes - uniquement pour les utilisateurs connectés */}
+      {/* Notes globales - uniquement pour les utilisateurs connectés */}
       {!isGuest && (
         <div className="mx-auto mb-8 w-full max-w-lg">
           <h2 className="mb-3 text-lg font-semibold">Notes (optionnel)</h2>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Ressenti, forme du jour..."
+            placeholder="Ressenti général, forme du jour..."
             className="w-full rounded-xl bg-card p-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             rows={3}
           />
         </div>
       )}
 
-      {/* Bouton terminer */}
-      <div className="mx-auto w-full max-w-lg">
-        <Button
-          size="lg"
-          className="w-full gap-2"
-          onClick={handleFinish}
-          disabled={isSaving}
-        >
-          <Home className="h-5 w-5" />
-          {isSaving ? "Sauvegarde..." : isGuest ? "Retour à l'accueil" : "Sauvegarder et terminer"}
-        </Button>
+      {/* Bouton terminer - fixé en bas */}
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-background via-background to-transparent pb-6 pt-8">
+        <div className="mx-auto w-full max-w-lg px-4">
+          <Button
+            size="lg"
+            className="w-full gap-2"
+            onClick={handleFinish}
+            disabled={isSaving}
+          >
+            <Home className="h-5 w-5" />
+            {isSaving ? "Sauvegarde..." : isGuest ? "Retour à l'accueil" : "Sauvegarder et terminer"}
+          </Button>
+        </div>
       </div>
     </div>
   );

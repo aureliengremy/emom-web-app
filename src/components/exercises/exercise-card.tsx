@@ -7,7 +7,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Exercise } from "@/types";
-import { getExerciseLevel, getLevelColor } from "@/data/emom-tables";
+import {
+  getDifficultyColor,
+  getDifficultyLabel,
+  getFamilyLabel,
+  getExerciseDisplayName,
+} from "@/data/emom-tables";
+import { useSettingsStore } from "@/stores/settings-store";
 import { cn } from "@/lib/utils";
 
 interface ExerciseCardProps {
@@ -21,8 +27,18 @@ export function ExerciseCard({
   onClick,
   selected = false,
 }: ExerciseCardProps) {
-  const level = getExerciseLevel(exercise.id, exercise.currentMax);
-  const levelColor = getLevelColor(level);
+  const language = useSettingsStore((s) => s.settings.language);
+
+  // Nom de l'exercice selon la langue
+  const displayName = getExerciseDisplayName(exercise, language);
+
+  // Utiliser la difficulté de l'exercice si disponible
+  const difficultyColor = exercise.difficulty
+    ? getDifficultyColor(exercise.difficulty)
+    : "bg-gray-500";
+  const difficultyLabel = exercise.difficulty
+    ? getDifficultyLabel(exercise.difficulty)
+    : "N/A";
 
   return (
     <Card
@@ -35,7 +51,7 @@ export function ExerciseCard({
       <CardContent className="flex items-center justify-between p-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <span className="font-semibold">{exercise.name}</span>
+            <span className="font-semibold">{displayName}</span>
             {exercise.type === "custom" && (
               <Badge variant="outline" className="text-xs">
                 Custom
@@ -43,18 +59,21 @@ export function ExerciseCard({
             )}
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            {exercise.family && (
+              <>
+                <span>{getFamilyLabel(exercise.family, language)}</span>
+                <span>•</span>
+              </>
+            )}
             <span>Max: {exercise.currentMax}</span>
             <span>•</span>
             <span>
-              {exercise.currentEMOM.reps} reps / EMOM {exercise.currentEMOM.duration}&apos;
-              {exercise.currentEMOM.weighted && (
-                <span className="ml-1">@ {exercise.currentEMOM.weight}kg</span>
-              )}
+              {exercise.currentEMOM.reps} reps / {exercise.currentEMOM.duration}&apos;
             </span>
           </div>
         </div>
-        <Badge className={cn("shrink-0", levelColor)}>
-          {level.charAt(0).toUpperCase() + level.slice(1)}
+        <Badge className={cn("shrink-0", difficultyColor)}>
+          {difficultyLabel}
         </Badge>
       </CardContent>
     </Card>

@@ -22,6 +22,7 @@ import {
   User,
   LogOut,
   LogIn,
+  Languages,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -126,6 +127,40 @@ export default function SettingsPage() {
                 </Button>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Langue des exercices */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Languages className="h-4 w-4" />
+              Langue des exercices
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              <Button
+                variant={settings.language === "fr" ? "default" : "outline"}
+                size="sm"
+                onClick={() => updateSettings({ language: "fr" })}
+                className={cn(
+                  settings.language === "fr" && "ring-2 ring-primary ring-offset-2"
+                )}
+              >
+                🇫🇷 Français
+              </Button>
+              <Button
+                variant={settings.language === "en" ? "default" : "outline"}
+                size="sm"
+                onClick={() => updateSettings({ language: "en" })}
+                className={cn(
+                  settings.language === "en" && "ring-2 ring-primary ring-offset-2"
+                )}
+              >
+                🇬🇧 English
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
