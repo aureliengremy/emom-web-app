@@ -5,6 +5,7 @@
 // ============================================
 
 import { useEffect, useState } from "react";
+import { useAuthStore } from "@/stores/auth-store";
 import { useExerciseStore } from "@/stores/exercise-store";
 import { useWorkoutStore } from "@/stores/workout-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -17,12 +18,18 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   const [isReady, setIsReady] = useState(false);
 
+  const initializeAuth = useAuthStore((s) => s.initialize);
   const initializePresets = useExerciseStore((s) => s.initializePresets);
   const loadWorkouts = useWorkoutStore((s) => s.loadWorkouts);
   const loadSettings = useSettingsStore((s) => s.loadSettings);
 
   useEffect(() => {
     async function initialize() {
+      // Initialiser l'auth EN PREMIER pour que les autres stores
+      // puissent savoir si l'utilisateur est connecté
+      await initializeAuth();
+
+      // Ensuite charger les données (exercices, workouts, settings)
       await Promise.all([
         initializePresets(),
         loadWorkouts(),
@@ -31,7 +38,7 @@ export function Providers({ children }: ProvidersProps) {
       setIsReady(true);
     }
     initialize();
-  }, [initializePresets, loadWorkouts, loadSettings]);
+  }, [initializeAuth, initializePresets, loadWorkouts, loadSettings]);
 
   if (!isReady) {
     return (
