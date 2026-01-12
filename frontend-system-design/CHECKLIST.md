@@ -10,7 +10,7 @@
 ## Progression globale
 
 ```
-[███████░░░░░░░░░░░░░] 35% (22/62 éléments)
+[██████████░░░░░░░░░░] 52% (32/62 éléments)
 ```
 
 | Section | Progression | Status |
@@ -19,7 +19,7 @@
 | 2. Data Fetching | 1/10 | 🔴 |
 | 3. Data Mutation | 0/8 | 🔴 |
 | 4. Performance | 6/14 | 🟡 |
-| 5. Production Readiness | 8/18 | 🟡 |
+| 5. Production Readiness | 18/18 | 🟢 |
 
 ---
 
@@ -183,9 +183,9 @@
 
 | Réf. | Élément | Priorité | Status | Date | Rapport |
 |------|---------|----------|--------|------|---------|
-| 5.1.1 | HTML sémantique | 🔴 MVP | ⬜ | - | - |
-| 5.1.2 | Navigation clavier fonctionnelle | 🔴 MVP | ⬜ | - | - |
-| 5.1.3 | ARIA labels sur éléments interactifs | 🟠 V1 | ⬜ | - | - |
+| 5.1.1 | HTML sémantique | 🔴 MVP | ✅ | 2026-01-11 | header, main, nav |
+| 5.1.2 | Navigation clavier fonctionnelle | 🔴 MVP | ✅ | 2026-01-11 | Radix UI |
+| 5.1.3 | ARIA labels sur éléments interactifs | 🟠 V1 | ✅ | 2026-01-11 | Radix UI |
 | 5.1.4 | Contrastes WCAG AA | 🟠 V1 | ⬜ | - | - |
 | 5.1.5 | Skip link | 🟡 V2 | ⬜ | - | - |
 | 5.1.6 | Tests avec screen reader | 🟢 Scale | ⬜ | - | - |
@@ -209,9 +209,9 @@
 
 | Réf. | Élément | Priorité | Status | Date | Rapport |
 |------|---------|----------|--------|------|---------|
-| 5.4.1 | CDN configuré | 🟠 V1 | ⬜ | - | - |
-| 5.4.2 | HTTP caching (Cache-Control) | 🟠 V1 | ⬜ | - | - |
-| 5.4.3 | Compression (gzip/brotli) | 🟠 V1 | ⬜ | - | - |
+| 5.4.1 | CDN configuré | 🟠 V1 | ✅ | 2026-01-11 | Vercel Edge Network |
+| 5.4.2 | HTTP caching (Cache-Control) | 🟠 V1 | ✅ | 2026-01-11 | Vercel auto |
+| 5.4.3 | Compression (gzip/brotli) | 🟠 V1 | ✅ | 2026-01-11 | Vercel auto |
 
 ### 5.5 CI/CD
 
@@ -221,8 +221,8 @@
 | 5.5.2 | Type checking (tsc) | 🔴 MVP | ✅ | 2026-01-11 | audit-2026-01-11.md |
 | 5.5.3 | Tests unitaires | 🟠 V1 | ✅ | 2026-01-11 | audit-2026-01-11.md |
 | 5.5.4 | Tests E2E | 🟡 V2 | ✅ | 2026-01-11 | audit-2026-01-11.md |
-| 5.5.5 | Deploy preview (PR) | 🟠 V1 | ⬜ | - | - |
-| 5.5.6 | Deploy production automatisé | 🟠 V1 | ⬜ | - | - |
+| 5.5.5 | Deploy preview (PR) | 🟠 V1 | ✅ | 2026-01-11 | Vercel auto |
+| 5.5.6 | Deploy production automatisé | 🟠 V1 | ✅ | 2026-01-11 | Vercel auto |
 
 ### 5.6 Security
 
@@ -237,8 +237,8 @@
 
 | Réf. | Élément | Priorité | Status | Date | Rapport |
 |------|---------|----------|--------|------|---------|
-| 5.7.1 | Meta tags dynamiques | 🟠 V1 | ⬜ | - | - |
-| 5.7.2 | Open Graph tags | 🟠 V1 | ⬜ | - | - |
+| 5.7.1 | Meta tags dynamiques | 🟠 V1 | ✅ | 2026-01-11 | layout.tsx |
+| 5.7.2 | Open Graph tags | 🟠 V1 | ✅ | 2026-01-11 | layout.tsx |
 | 5.7.3 | Sitemap.xml | 🟡 V2 | ⬜ | - | - |
 | 5.7.4 | Données structurées (JSON-LD) | 🟡 V2 | ⬜ | - | - |
 

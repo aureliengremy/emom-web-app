@@ -198,6 +198,23 @@ npm run test:e2e:ui   # Playwright UI mode
 
 ---
 
+## Terminé : SEO, Infrastructure, Accessibilité (Audit 5.x)
+
+### Tâches complétées
+
+- [x] Open Graph tags + Twitter cards
+- [x] Meta robots
+- [x] CDN, Caching, Compression (Vercel)
+- [x] Deploy preview + production (Vercel)
+- [x] HTML sémantique (header, main)
+- [x] Accessibilité Radix UI (keyboard nav, ARIA)
+
+### Résultat
+
+**Production Readiness : 18/18 (100%)**
+
+---
+
 ## Terminé : Bundle Size & npm Audit (Audit 4.2.2, 5.6.4)
 
 ### Tâches complétées

@@ -17,6 +17,22 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "EMOM",
   },
+  openGraph: {
+    title: "EMOM - Every Minute On the Minute",
+    description: "Application de suivi d'entraînement EMOM simple et efficace",
+    type: "website",
+    locale: "fr_FR",
+    siteName: "EMOM App",
+  },
+  twitter: {
+    card: "summary",
+    title: "EMOM - Every Minute On the Minute",
+    description: "Application de suivi d'entraînement EMOM simple et efficace",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export const viewport: Viewport = {
