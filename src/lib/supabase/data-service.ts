@@ -5,26 +5,29 @@
 
 import { createClient } from "./client";
 import type { Exercise, Workout, UserSettings, SavedSession } from "@/types";
+import { deduplicatedFetch, REQUEST_KEYS } from "@/lib/fetch-utils";
 
 // ============================================
 // Exercises
 // ============================================
 
 export async function getSupabaseExercises(): Promise<Exercise[]> {
-  const supabase = createClient();
+  return deduplicatedFetch(REQUEST_KEYS.exercises, async () => {
+    const supabase = createClient();
 
-  // RLS gère le filtrage : présets (user_id NULL) + exercices de l'utilisateur
-  const { data, error } = await supabase
-    .from("exercises")
-    .select("*")
-    .order("created_at", { ascending: true });
+    // RLS gère le filtrage : présets (user_id NULL) + exercices de l'utilisateur
+    const { data, error } = await supabase
+      .from("exercises")
+      .select("*")
+      .order("created_at", { ascending: true });
 
-  if (error) {
-    console.error("Error fetching exercises:", error);
-    return [];
-  }
+    if (error) {
+      console.error("Error fetching exercises:", error);
+      return [];
+    }
 
-  return (data || []).map(mapDbExerciseToExercise);
+    return (data || []).map(mapDbExerciseToExercise);
+  });
 }
 
 export async function saveSupabaseExercise(
@@ -83,20 +86,22 @@ export async function deleteSupabaseExercise(exerciseId: string): Promise<void> 
 // ============================================
 
 export async function getSupabaseWorkouts(userId: string): Promise<Workout[]> {
-  const supabase = createClient();
+  return deduplicatedFetch(REQUEST_KEYS.workouts(userId), async () => {
+    const supabase = createClient();
 
-  const { data, error } = await supabase
-    .from("workouts")
-    .select("*")
-    .eq("user_id", userId)
-    .order("date", { ascending: false });
+    const { data, error } = await supabase
+      .from("workouts")
+      .select("*")
+      .eq("user_id", userId)
+      .order("date", { ascending: false });
 
-  if (error) {
-    console.error("Error fetching workouts:", error);
-    return [];
-  }
+    if (error) {
+      console.error("Error fetching workouts:", error);
+      return [];
+    }
 
-  return (data || []).map(mapDbWorkoutToWorkout);
+    return (data || []).map(mapDbWorkoutToWorkout);
+  });
 }
 
 export async function saveSupabaseWorkout(
@@ -148,20 +153,22 @@ export async function deleteSupabaseWorkout(workoutId: string): Promise<void> {
 export async function getSupabaseSettings(
   userId: string
 ): Promise<UserSettings | null> {
-  const supabase = createClient();
+  return deduplicatedFetch(REQUEST_KEYS.settings(userId), async () => {
+    const supabase = createClient();
 
-  const { data, error } = await supabase
-    .from("user_settings")
-    .select("*")
-    .eq("id", userId)
-    .single();
+    const { data, error } = await supabase
+      .from("user_settings")
+      .select("*")
+      .eq("id", userId)
+      .single();
 
-  if (error) {
-    console.error("Error fetching settings:", error);
-    return null;
-  }
+    if (error) {
+      console.error("Error fetching settings:", error);
+      return null;
+    }
 
-  return data ? mapDbSettingsToSettings(data) : null;
+    return data ? mapDbSettingsToSettings(data) : null;
+  });
 }
 
 export async function saveSupabaseSettings(
@@ -279,20 +286,22 @@ function mapDbSettingsToSettings(db: DbSettings): UserSettings {
 // ============================================
 
 export async function getSavedSessions(userId: string): Promise<SavedSession[]> {
-  const supabase = createClient();
+  return deduplicatedFetch(REQUEST_KEYS.sessions(userId), async () => {
+    const supabase = createClient();
 
-  const { data, error } = await supabase
-    .from("sessions")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("sessions")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Error fetching sessions:", error);
-    return [];
-  }
+    if (error) {
+      console.error("Error fetching sessions:", error);
+      return [];
+    }
 
-  return (data || []).map(mapDbSavedSessionToSavedSession);
+    return (data || []).map(mapDbSavedSessionToSavedSession);
+  });
 }
 
 export async function saveSavedSession(
