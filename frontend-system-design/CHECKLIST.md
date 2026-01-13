@@ -2,7 +2,7 @@
 
 > **Projet** : EMOM Web App
 > **Créé le** : 2026-01-11
-> **Dernière mise à jour** : 2026-01-11
+> **Dernière mise à jour** : 2026-01-13
 > **Phase actuelle** : MVP
 
 ---
@@ -10,12 +10,12 @@
 ## Progression globale
 
 ```
-[███████████░░░░░░░░░] 58% (36/62 éléments)
+[████████████░░░░░░░░] 63% (39/62 éléments)
 ```
 
 | Section | Progression | Status |
 |---------|-------------|--------|
-| 1. Data Modelling | 7/12 | 🟡 |
+| 1. Data Modelling | 10/10 | 🟢 |
 | 2. Data Fetching | 3/10 | 🔴 |
 | 3. Data Mutation | 0/8 | 🔴 |
 | 4. Performance | 9/14 | 🟡 |
@@ -41,7 +41,7 @@
 | 1.2.1 | Store principal configuré | 🔴 MVP | ✅ | 2026-01-11 | audit-2026-01-11.md |
 | 1.2.2 | DevTools activés (dev) | 🟠 V1 | ✅ | 2026-01-11 | audit-2026-01-11.md |
 | 1.2.3 | Selectors implémentés | 🟠 V1 | ✅ | 2026-01-11 | audit-2026-01-11.md |
-| 1.2.4 | Memoization en place | 🟡 V2 | ⬜ | - | - |
+| 1.2.4 | Memoization en place | 🟡 V2 | ✅ | 2026-01-13 | React.memo, useMemo |
 
 ### 1.3 Outils / Libraries
 
@@ -62,8 +62,8 @@
 
 | Réf. | Élément | Priorité | Status | Date | Rapport |
 |------|---------|----------|--------|------|---------|
-| 1.5.1 | Modèle de domaine documenté | 🟡 V2 | ⬜ | - | - |
-| 1.5.2 | Bounded contexts identifiés | 🟢 Scale | ⬜ | - | - |
+| 1.5.1 | Modèle de domaine documenté | 🟡 V2 | ✅ | 2026-01-13 | DOMAIN-MODEL.md |
+| 1.5.2 | Bounded contexts identifiés | 🟢 Scale | ✅ | 2026-01-13 | BOUNDED-CONTEXTS.md |
 
 ---
 
