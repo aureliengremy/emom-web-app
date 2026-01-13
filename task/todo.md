@@ -355,6 +355,11 @@ Pour visualiser : installer l'extension Redux DevTools dans Chrome/Firefox.
 - [ ] Monitoring (Sentry)
 - [ ] PWA améliorée (offline mode)
 
+### Performance (audit 2026-01-12)
+- [ ] Supprimer `framer-motion` (inutilisé, ~400KB)
+- [ ] Lazy loading des charts avec `next/dynamic`
+- [ ] Mesurer Core Web Vitals
+
 ---
 
 ## Terminé (historique)

@@ -10,15 +10,15 @@
 ## Progression globale
 
 ```
-[██████████░░░░░░░░░░] 52% (32/62 éléments)
+[███████████░░░░░░░░░] 56% (35/62 éléments)
 ```
 
 | Section | Progression | Status |
 |---------|-------------|--------|
 | 1. Data Modelling | 7/12 | 🟡 |
-| 2. Data Fetching | 1/10 | 🔴 |
+| 2. Data Fetching | 3/10 | 🔴 |
 | 3. Data Mutation | 0/8 | 🔴 |
-| 4. Performance | 6/14 | 🟡 |
+| 4. Performance | 8/14 | 🟡 |
 | 5. Production Readiness | 18/18 | 🟢 |
 
 ---
@@ -75,7 +75,7 @@
 
 | Réf. | Élément | Priorité | Status | Date | Rapport |
 |------|---------|----------|--------|------|---------|
-| 2.1.1 | TanStack Query configuré | 🔴 MVP | ⬜ | - | - |
+| 2.1.1 | TanStack Query configuré | 🔴 MVP | ❌ | 2026-01-12 | Zustand + Supabase |
 | 2.1.2 | Stale time défini par type de données | 🟠 V1 | ⬜ | - | - |
 | 2.1.3 | Stratégie d'invalidation définie | 🟠 V1 | ⬜ | - | - |
 | 2.1.4 | Cache persistant (si offline) | 🟢 Scale | ⬜ | - | - |
@@ -91,7 +91,7 @@
 
 | Réf. | Élément | Priorité | Status | Date | Rapport |
 |------|---------|----------|--------|------|---------|
-| 2.3.1 | Debouncing sur les recherches | 🔴 MVP | ⬜ | - | - |
+| 2.3.1 | Debouncing sur les recherches | 🔴 MVP | ❌ | 2026-01-12 | Filtrage local |
 | 2.3.2 | Request cancellation (AbortController) | 🟠 V1 | ⬜ | - | - |
 | 2.3.3 | Deduplication des requêtes | 🟡 V2 | ⬜ | - | - |
 | 2.3.4 | Throttling configuré | 🟡 V2 | ⬜ | - | - |
@@ -145,8 +145,8 @@
 |------|---------|----------|--------|------|---------|
 | 4.2.1 | Code splitting activé | 🔴 MVP | ✅ | 2026-01-11 | audit-2026-01-11.md |
 | 4.2.2 | Bundle size analysé (<200kB gzip) | 🟠 V1 | ✅ | 2026-01-11 | 2.6MB total, chunks OK |
-| 4.2.3 | Tree shaking vérifié | 🟠 V1 | ⬜ | - | - |
-| 4.2.4 | Imports optimisés (modularize) | 🟡 V2 | ⬜ | - | - |
+| 4.2.3 | Tree shaking vérifié | 🟠 V1 | ✅ | 2026-01-12 | Lucide, Recharts OK |
+| 4.2.4 | Imports optimisés (modularize) | 🟡 V2 | ⬜ | - | framer-motion inutilisé |
 
 ### 4.3 Rendering Strategies
 
@@ -161,8 +161,8 @@
 
 | Réf. | Élément | Priorité | Status | Date | Rapport |
 |------|---------|----------|--------|------|---------|
-| 4.4.1 | Images optimisées (next/image) | 🔴 MVP | ⬜ | - | - |
-| 4.4.2 | Lazy loading des composants lourds | 🟠 V1 | ⬜ | - | - |
+| 4.4.1 | Images optimisées (next/image) | 🔴 MVP | ❌ | 2026-01-12 | N/A (pas d'images) |
+| 4.4.2 | Lazy loading des composants lourds | 🟠 V1 | ⬜ | - | Charts à lazy load |
 | 4.4.3 | Fonts optimisées (preload, swap) | 🟠 V1 | ✅ | 2026-01-11 | audit-2026-01-11.md |
 | 4.4.4 | Preload des ressources critiques | 🟡 V2 | ⬜ | - | - |
 

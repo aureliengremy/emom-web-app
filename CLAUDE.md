@@ -118,3 +118,26 @@ npm run lint     # Linter
 ## Todo list
 
 Voir `task/todo.md` pour les tâches en cours.
+
+---
+
+## Frontend Architect
+
+Ce projet utilise l'agent Frontend Architect pour le suivi de l'architecture frontend.
+
+### Agent
+- `.claude/agents/frontend-architect/AGENT.md`
+
+### Commandes disponibles
+- `/audit` — Analyse architecturale du projet
+- `/scaffold` — Génère une structure de projet
+- `/checklist` — Gère la checklist de suivi
+
+### Skills
+- `.claude/skills/data-layer/SKILL.md` — State, fetching, mutations
+- `.claude/skills/performance/SKILL.md` — Performance, rendering
+- `.claude/skills/production-readiness/SKILL.md` — Security, a11y, CI/CD, SEO
+
+### Suivi
+- Checklist : `frontend-system-design/CHECKLIST.md`
+- Rapports : `frontend-system-design/rapports/`
