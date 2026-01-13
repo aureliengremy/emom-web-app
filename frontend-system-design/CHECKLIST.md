@@ -10,13 +10,13 @@
 ## Progression globale
 
 ```
-[████████████░░░░░░░░] 63% (39/62 éléments)
+[██████████████░░░░░░] 74% (46/62 éléments)
 ```
 
 | Section | Progression | Status |
 |---------|-------------|--------|
 | 1. Data Modelling | 10/10 | 🟢 |
-| 2. Data Fetching | 3/10 | 🔴 |
+| 2. Data Fetching | 10/10 | 🟢 |
 | 3. Data Mutation | 0/8 | 🔴 |
 | 4. Performance | 9/14 | 🟡 |
 | 5. Production Readiness | 18/18 | 🟢 |
@@ -76,25 +76,25 @@
 | Réf. | Élément | Priorité | Status | Date | Rapport |
 |------|---------|----------|--------|------|---------|
 | 2.1.1 | TanStack Query configuré | 🔴 MVP | ❌ | 2026-01-12 | Zustand + Supabase |
-| 2.1.2 | Stale time défini par type de données | 🟠 V1 | ⬜ | - | - |
-| 2.1.3 | Stratégie d'invalidation définie | 🟠 V1 | ⬜ | - | - |
-| 2.1.4 | Cache persistant (si offline) | 🟢 Scale | ⬜ | - | - |
+| 2.1.2 | Stale time défini par type de données | 🟠 V1 | ✅ | 2026-01-13 | DATA-FETCHING-STRATEGY.md |
+| 2.1.3 | Stratégie d'invalidation définie | 🟠 V1 | ✅ | 2026-01-13 | DATA-FETCHING-STRATEGY.md |
+| 2.1.4 | Cache persistant (si offline) | 🟢 Scale | ✅ | 2026-01-13 | IndexedDB (Dexie) |
 
 ### 2.2 Pagination
 
 | Réf. | Élément | Priorité | Status | Date | Rapport |
 |------|---------|----------|--------|------|---------|
-| 2.2.1 | Stratégie de pagination choisie | 🟠 V1 | ⬜ | - | - |
-| 2.2.2 | Infinite loading implémenté (si nécessaire) | 🟡 V2 | ⬜ | - | - |
+| 2.2.1 | Stratégie de pagination choisie | 🟠 V1 | ✅ | 2026-01-13 | No pagination (volume faible) |
+| 2.2.2 | Infinite loading implémenté (si nécessaire) | 🟡 V2 | ❌ | 2026-01-13 | Non requis |
 
 ### 2.3 Request Optimisation
 
 | Réf. | Élément | Priorité | Status | Date | Rapport |
 |------|---------|----------|--------|------|---------|
 | 2.3.1 | Debouncing sur les recherches | 🔴 MVP | ❌ | 2026-01-12 | Filtrage local |
-| 2.3.2 | Request cancellation (AbortController) | 🟠 V1 | ⬜ | - | - |
-| 2.3.3 | Deduplication des requêtes | 🟡 V2 | ⬜ | - | - |
-| 2.3.4 | Throttling configuré | 🟡 V2 | ⬜ | - | - |
+| 2.3.2 | Request cancellation (AbortController) | 🟠 V1 | ✅ | 2026-01-13 | fetch-utils.ts |
+| 2.3.3 | Deduplication des requêtes | 🟡 V2 | ✅ | 2026-01-13 | data-service.ts |
+| 2.3.4 | Throttling configuré | 🟡 V2 | ✅ | 2026-01-13 | fetch-utils.ts |
 
 ---
 
