@@ -4,6 +4,7 @@
 // Graphique de progression
 // ============================================
 
+import { useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -35,6 +36,16 @@ export function ProgressChart({
   valueLabel = "Valeur",
   color = "hsl(var(--primary))",
 }: ProgressChartProps) {
+  // Memoize formatted data to avoid recalculating on every render
+  const formattedData = useMemo(
+    () =>
+      data.map((point) => ({
+        ...point,
+        formattedDate: format(new Date(point.date), "d MMM", { locale: fr }),
+      })),
+    [data]
+  );
+
   if (data.length === 0) {
     return (
       <div className="flex h-[200px] items-center justify-center text-muted-foreground">
@@ -42,11 +53,6 @@ export function ProgressChart({
       </div>
     );
   }
-
-  const formattedData = data.map((point) => ({
-    ...point,
-    formattedDate: format(new Date(point.date), "d MMM", { locale: fr }),
-  }));
 
   return (
     <div className="w-full">

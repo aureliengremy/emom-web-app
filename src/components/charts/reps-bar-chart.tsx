@@ -4,6 +4,7 @@
 // Graphique en barres des reps
 // ============================================
 
+import { useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -13,7 +14,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { format, startOfWeek, endOfWeek, eachWeekOfInterval, subWeeks } from "date-fns";
+import { format, endOfWeek, eachWeekOfInterval, subWeeks } from "date-fns";
 import { fr } from "date-fns/locale";
 
 interface WorkoutData {
@@ -27,6 +28,31 @@ interface RepsBarChartProps {
 }
 
 export function RepsBarChart({ data, weeks = 8 }: RepsBarChartProps) {
+  // Memoize weekly data aggregation (expensive computation with date filtering)
+  const weeklyData = useMemo(() => {
+    const now = new Date();
+    const startDate = subWeeks(now, weeks - 1);
+    const weekIntervals = eachWeekOfInterval(
+      { start: startDate, end: now },
+      { weekStartsOn: 1 }
+    );
+
+    return weekIntervals.map((weekStart) => {
+      const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+      const weekReps = data
+        .filter((d) => {
+          const date = new Date(d.date);
+          return date >= weekStart && date <= weekEnd;
+        })
+        .reduce((sum, d) => sum + d.reps, 0);
+
+      return {
+        week: format(weekStart, "d MMM", { locale: fr }),
+        reps: weekReps,
+      };
+    });
+  }, [data, weeks]);
+
   if (data.length === 0) {
     return (
       <div className="flex h-[200px] items-center justify-center text-muted-foreground">
@@ -34,30 +60,6 @@ export function RepsBarChart({ data, weeks = 8 }: RepsBarChartProps) {
       </div>
     );
   }
-
-  // Créer les semaines
-  const now = new Date();
-  const startDate = subWeeks(now, weeks - 1);
-  const weekIntervals = eachWeekOfInterval(
-    { start: startDate, end: now },
-    { weekStartsOn: 1 }
-  );
-
-  // Agréger les reps par semaine
-  const weeklyData = weekIntervals.map((weekStart) => {
-    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
-    const weekReps = data
-      .filter((d) => {
-        const date = new Date(d.date);
-        return date >= weekStart && date <= weekEnd;
-      })
-      .reduce((sum, d) => sum + d.reps, 0);
-
-    return {
-      week: format(weekStart, "d MMM", { locale: fr }),
-      reps: weekReps,
-    };
-  });
 
   return (
     <ResponsiveContainer width="100%" height={200}>

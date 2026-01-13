@@ -4,6 +4,7 @@
 // Carte d'exercice
 // ============================================
 
+import { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Exercise } from "@/types";
@@ -22,7 +23,7 @@ interface ExerciseCardProps {
   selected?: boolean;
 }
 
-export function ExerciseCard({
+export const ExerciseCard = memo(function ExerciseCard({
   exercise,
   onClick,
   selected = false,
@@ -78,4 +79,4 @@ export function ExerciseCard({
       </CardContent>
     </Card>
   );
-}
+});
