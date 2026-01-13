@@ -356,7 +356,7 @@ Pour visualiser : installer l'extension Redux DevTools dans Chrome/Firefox.
 - [ ] PWA améliorée (offline mode)
 
 ### Performance (audit 2026-01-12)
-- [ ] Supprimer `framer-motion` (inutilisé, ~400KB)
+- [x] Supprimer `framer-motion` (inutilisé, ~400KB)
 - [ ] Lazy loading des charts avec `next/dynamic`
 - [ ] Mesurer Core Web Vitals
 

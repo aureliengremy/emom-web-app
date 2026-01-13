@@ -10,7 +10,7 @@
 ## Progression globale
 
 ```
-[███████████░░░░░░░░░] 56% (35/62 éléments)
+[███████████░░░░░░░░░] 58% (36/62 éléments)
 ```
 
 | Section | Progression | Status |
@@ -18,7 +18,7 @@
 | 1. Data Modelling | 7/12 | 🟡 |
 | 2. Data Fetching | 3/10 | 🔴 |
 | 3. Data Mutation | 0/8 | 🔴 |
-| 4. Performance | 8/14 | 🟡 |
+| 4. Performance | 9/14 | 🟡 |
 | 5. Production Readiness | 18/18 | 🟢 |
 
 ---
@@ -146,7 +146,7 @@
 | 4.2.1 | Code splitting activé | 🔴 MVP | ✅ | 2026-01-11 | audit-2026-01-11.md |
 | 4.2.2 | Bundle size analysé (<200kB gzip) | 🟠 V1 | ✅ | 2026-01-11 | 2.6MB total, chunks OK |
 | 4.2.3 | Tree shaking vérifié | 🟠 V1 | ✅ | 2026-01-12 | Lucide, Recharts OK |
-| 4.2.4 | Imports optimisés (modularize) | 🟡 V2 | ⬜ | - | framer-motion inutilisé |
+| 4.2.4 | Imports optimisés (modularize) | 🟡 V2 | ✅ | 2026-01-13 | framer-motion supprimé |
 
 ### 4.3 Rendering Strategies
 
