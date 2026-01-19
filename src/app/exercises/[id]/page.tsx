@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { RepsBarChart } from "@/components/charts/reps-bar-chart";
+import { LazyRepsBarChart } from "@/components/charts/lazy-charts";
 
 export default function ExerciseDetailPage() {
   const params = useParams();
@@ -200,7 +200,7 @@ export default function ExerciseDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <RepsBarChart data={chartData} weeks={8} />
+              <LazyRepsBarChart data={chartData} weeks={8} />
             </CardContent>
           </Card>
         )}
