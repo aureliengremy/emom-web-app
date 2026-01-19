@@ -116,15 +116,23 @@ export const useWorkoutStore = create<WorkoutState>()(
   deleteWorkoutFromHistory: async (id) => {
     const user = getAuthUser();
 
-    if (user) {
-      await deleteSupabaseWorkout(id);
-    } else {
-      await deleteLocalWorkout(id);
-    }
-
+    // Optimistic update - supprimer immédiatement
+    const previousWorkouts = get().workoutHistory;
     set((state) => ({
       workoutHistory: state.workoutHistory.filter((w) => w.id !== id),
     }));
+
+    try {
+      if (user) {
+        await deleteSupabaseWorkout(id);
+      } else {
+        await deleteLocalWorkout(id);
+      }
+    } catch (error) {
+      // Rollback en cas d'erreur
+      set({ workoutHistory: previousWorkouts });
+      throw error;
+    }
   },
 
   // === Session ===

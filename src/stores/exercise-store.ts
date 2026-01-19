@@ -138,16 +138,20 @@ export const useExerciseStore = create<ExerciseState>()(
       createdAt: now,
     };
 
+    // Optimistic update - ajouter immédiatement
+    const previousExercises = get().exercises;
+    set((state) => ({ exercises: [...state.exercises, exercise] }));
+
     try {
       if (user) {
         await saveSupabaseExercise(user.id, exercise);
       } else {
         await saveLocalExercise(exercise);
       }
-
-      set((state) => ({ exercises: [...state.exercises, exercise] }));
       return exercise;
     } catch (error) {
+      // Rollback en cas d'erreur
+      set({ exercises: previousExercises });
       console.error("Error in addExercise:", error);
       throw error;
     }
@@ -160,15 +164,23 @@ export const useExerciseStore = create<ExerciseState>()(
 
     const updated = { ...exercise, ...updates };
 
-    if (user) {
-      await saveSupabaseExercise(user.id, updated);
-    } else {
-      await saveLocalExercise(updated);
-    }
-
+    // Optimistic update
+    const previousExercises = get().exercises;
     set((state) => ({
       exercises: state.exercises.map((e) => (e.id === id ? updated : e)),
     }));
+
+    try {
+      if (user) {
+        await saveSupabaseExercise(user.id, updated);
+      } else {
+        await saveLocalExercise(updated);
+      }
+    } catch (error) {
+      // Rollback en cas d'erreur
+      set({ exercises: previousExercises });
+      throw error;
+    }
   },
 
   updateMax: async (id, newMax) => {
@@ -184,15 +196,23 @@ export const useExerciseStore = create<ExerciseState>()(
       lastTested: new Date().toISOString(),
     };
 
-    if (user) {
-      await saveSupabaseExercise(user.id, updated);
-    } else {
-      await saveLocalExercise(updated);
-    }
-
+    // Optimistic update
+    const previousExercises = get().exercises;
     set((state) => ({
       exercises: state.exercises.map((e) => (e.id === id ? updated : e)),
     }));
+
+    try {
+      if (user) {
+        await saveSupabaseExercise(user.id, updated);
+      } else {
+        await saveLocalExercise(updated);
+      }
+    } catch (error) {
+      // Rollback en cas d'erreur
+      set({ exercises: previousExercises });
+      throw error;
+    }
   },
 
   deleteExercise: async (id) => {
@@ -200,15 +220,23 @@ export const useExerciseStore = create<ExerciseState>()(
     const exercise = get().getExerciseById(id);
     if (!exercise || exercise.type === "preset") return;
 
-    if (user) {
-      await deleteSupabaseExercise(id);
-    } else {
-      await deleteLocalExercise(id);
-    }
-
+    // Optimistic update - supprimer immédiatement
+    const previousExercises = get().exercises;
     set((state) => ({
       exercises: state.exercises.filter((e) => e.id !== id),
     }));
+
+    try {
+      if (user) {
+        await deleteSupabaseExercise(id);
+      } else {
+        await deleteLocalExercise(id);
+      }
+    } catch (error) {
+      // Rollback en cas d'erreur
+      set({ exercises: previousExercises });
+      throw error;
+    }
   },
 
   // Synchroniser les données locales vers le cloud

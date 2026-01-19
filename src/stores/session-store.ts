@@ -170,12 +170,17 @@ export const useSessionStore = create<SessionState>()(
   },
 
   deleteSavedSessionById: async (sessionId) => {
+    // Optimistic update - supprimer immédiatement
+    const previousSessions = get().savedSessions;
+    set((state) => ({
+      savedSessions: state.savedSessions.filter((s) => s.id !== sessionId),
+    }));
+
     try {
       await deleteSavedSession(sessionId);
-      set((state) => ({
-        savedSessions: state.savedSessions.filter((s) => s.id !== sessionId),
-      }));
     } catch (error) {
+      // Rollback en cas d'erreur
+      set({ savedSessions: previousSessions });
       console.error("Error deleting session:", error);
       throw error;
     }
