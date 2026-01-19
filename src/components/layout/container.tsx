@@ -4,6 +4,18 @@
 
 import { cn } from "@/lib/utils";
 
+// Skip link pour l'accessibilité (visible uniquement au focus)
+function SkipLink() {
+  return (
+    <a
+      href="#main-content"
+      className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:outline-none"
+    >
+      Aller au contenu principal
+    </a>
+  );
+}
+
 interface ContainerProps {
   children: React.ReactNode;
   className?: string;
@@ -31,6 +43,7 @@ export function Container({
         className
       )}
     >
+      <SkipLink />
       {children}
     </div>
   );
@@ -61,7 +74,7 @@ interface MainProps {
 
 export function Main({ children, className }: MainProps) {
   return (
-    <main className={cn("flex-1 pb-24", className)}>
+    <main id="main-content" className={cn("flex-1 pb-24", className)}>
       {children}
     </main>
   );
