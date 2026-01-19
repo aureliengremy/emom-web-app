@@ -23,6 +23,9 @@ const RATING_OPTIONS: { value: WorkoutRating; emoji: string; label: string }[] =
   { value: "hard", emoji: "🥵", label: "Dur" },
 ];
 
+const MAX_NOTES_LENGTH = 1000;
+const MAX_COMMENT_LENGTH = 500;
+
 export default function WorkoutCompletePage() {
   const router = useRouter();
   const { currentWorkout, finishWorkout, updateSetFeedback } = useWorkoutStore();
@@ -31,6 +34,7 @@ export default function WorkoutCompletePage() {
   const isGuest = !user;
   const [selectedRating, setSelectedRating] = useState<WorkoutRating | null>(null);
   const [notes, setNotes] = useState("");
+  const [notesError, setNotesError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [expandedSetId, setExpandedSetId] = useState<string | null>(null);
 
@@ -90,6 +94,10 @@ export default function WorkoutCompletePage() {
   };
 
   const handleSetComment = (setId: string, comment: string) => {
+    // Validation de la longueur du commentaire
+    if (comment.length > MAX_COMMENT_LENGTH) {
+      return;
+    }
     const set = currentWorkout.sets.find((s) => s.id === setId);
     updateSetFeedback(setId, {
       ...set?.feedback,
@@ -97,10 +105,25 @@ export default function WorkoutCompletePage() {
     });
   };
 
+  const handleNotesChange = (value: string) => {
+    if (value.length > MAX_NOTES_LENGTH) {
+      setNotesError(`Maximum ${MAX_NOTES_LENGTH} caractères`);
+      return;
+    }
+    setNotesError(null);
+    setNotes(value);
+  };
+
   const handleFinish = async () => {
+    // Validation avant sauvegarde
+    if (notes.length > MAX_NOTES_LENGTH) {
+      setNotesError(`Maximum ${MAX_NOTES_LENGTH} caractères`);
+      return;
+    }
+
     setIsSaving(true);
     try {
-      await finishWorkout(selectedRating ?? undefined, notes || undefined);
+      await finishWorkout(selectedRating ?? undefined, notes.trim() || undefined);
       clearSession();
       router.push("/");
     } catch (error) {
@@ -174,6 +197,7 @@ export default function WorkoutCompletePage() {
             {currentWorkout.sets.map((set, index) => {
               const isExpanded = expandedSetId === set.id;
               const hasFeedback = set.feedback?.rating || set.feedback?.comment;
+              const commentLength = set.feedback?.comment?.length || 0;
 
               return (
                 <Card key={set.id}>
@@ -234,9 +258,14 @@ export default function WorkoutCompletePage() {
 
                         {/* Commentaire par set */}
                         <div>
-                          <span className="mb-2 block text-xs text-muted-foreground">
-                            Commentaire (optionnel)
-                          </span>
+                          <div className="mb-2 flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">
+                              Commentaire (optionnel)
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {commentLength}/{MAX_COMMENT_LENGTH}
+                            </span>
+                          </div>
                           <div className="relative">
                             <MessageSquare className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                             <input
@@ -244,6 +273,7 @@ export default function WorkoutCompletePage() {
                               value={set.feedback?.comment || ""}
                               onChange={(e) => handleSetComment(set.id, e.target.value)}
                               placeholder="Ex: Forme parfaite, fatigue à la fin..."
+                              maxLength={MAX_COMMENT_LENGTH}
                               className="w-full rounded-lg bg-muted/50 py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                             />
                           </div>
@@ -285,14 +315,26 @@ export default function WorkoutCompletePage() {
       {/* Notes globales - uniquement pour les utilisateurs connectés */}
       {!isGuest && (
         <div className="mx-auto mb-8 w-full max-w-lg">
-          <h2 className="mb-3 text-lg font-semibold">Notes (optionnel)</h2>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Notes (optionnel)</h2>
+            <span className="text-xs text-muted-foreground">
+              {notes.length}/{MAX_NOTES_LENGTH}
+            </span>
+          </div>
           <textarea
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={(e) => handleNotesChange(e.target.value)}
             placeholder="Ressenti général, forme du jour..."
-            className="w-full rounded-xl bg-card p-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            maxLength={MAX_NOTES_LENGTH}
+            className={cn(
+              "w-full rounded-xl bg-card p-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary",
+              notesError && "ring-2 ring-destructive"
+            )}
             rows={3}
           />
+          {notesError && (
+            <p className="mt-1 text-xs text-destructive">{notesError}</p>
+          )}
         </div>
       )}
 
@@ -303,7 +345,7 @@ export default function WorkoutCompletePage() {
             size="lg"
             className="w-full gap-2"
             onClick={handleFinish}
-            disabled={isSaving}
+            disabled={isSaving || !!notesError}
           >
             <Home className="h-5 w-5" />
             {isSaving ? "Sauvegarde..." : isGuest ? "Retour à l'accueil" : "Sauvegarder et terminer"}

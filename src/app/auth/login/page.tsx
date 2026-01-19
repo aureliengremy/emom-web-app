@@ -6,6 +6,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Container, Main } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +15,12 @@ import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/stores/auth-store";
 import { Dumbbell, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
+import {
+  loginSchema,
+  signupSchema,
+  type LoginFormData,
+  type SignupFormData,
+} from "@/lib/validations";
 
 type AuthMode = "login" | "signup";
 
@@ -33,9 +41,28 @@ export default function LoginPage() {
   // Initialiser le mode depuis l'URL (tab=signup ou tab=login)
   const initialMode = searchParams.get("tab") === "signup" ? "signup" : "login";
   const [mode, setMode] = useState<AuthMode>(initialMode);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Form pour login
+  const {
+    register: loginRegister,
+    handleSubmit: handleLoginSubmit,
+    reset: resetLogin,
+    formState: { errors: loginErrors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  // Form pour signup
+  const {
+    register: signupRegister,
+    handleSubmit: handleSignupSubmit,
+    reset: resetSignup,
+    formState: { errors: signupErrors },
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: { email: "", password: "", confirmPassword: "" },
+  });
 
   useEffect(() => {
     initialize();
@@ -55,40 +82,24 @@ export default function LoginPage() {
     }
   }, [isInitialized, user, router]);
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!email || !password) {
-      toast.error("Email et mot de passe requis");
-      return;
-    }
-
-    if (mode === "signup") {
-      if (password !== confirmPassword) {
-        toast.error("Les mots de passe ne correspondent pas");
-        return;
-      }
-      if (password.length < 6) {
-        toast.error("Le mot de passe doit faire au moins 6 caractères");
-        return;
-      }
-
-      const result = await signUpWithEmail(email, password);
-      if (result.error) {
-        toast.error(result.error);
-      } else if (result.needsEmailConfirmation) {
-        toast.success("Compte créé ! Vérifie ton email pour confirmer.");
-      } else if (result.success) {
-        toast.success("Compte créé avec succès !");
-        router.push("/");
-      }
+  const handleLogin = async (data: LoginFormData) => {
+    const result = await signInWithEmail(data.email, data.password);
+    if (result.error) {
+      toast.error(result.error);
     } else {
-      const result = await signInWithEmail(email, password);
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        router.push("/");
-      }
+      router.push("/");
+    }
+  };
+
+  const handleSignup = async (data: SignupFormData) => {
+    const result = await signUpWithEmail(data.email, data.password);
+    if (result.error) {
+      toast.error(result.error);
+    } else if (result.needsEmailConfirmation) {
+      toast.success("Compte créé ! Vérifie ton email pour confirmer.");
+    } else if (result.success) {
+      toast.success("Compte créé avec succès !");
+      router.push("/");
     }
   };
 
@@ -106,6 +117,14 @@ export default function LoginPage() {
     } catch {
       toast.error("Erreur lors de la connexion avec Apple");
     }
+  };
+
+  const switchMode = () => {
+    const newMode = mode === "login" ? "signup" : "login";
+    setMode(newMode);
+    // Reset les deux forms quand on switch
+    resetLogin();
+    resetSignup();
   };
 
   if (!isInitialized) {
@@ -141,46 +160,101 @@ export default function LoginPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Email/Password Form */}
-              <form onSubmit={handleEmailAuth} className="space-y-3">
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                />
-                <Input
-                  type="password"
-                  placeholder="Mot de passe"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                />
-                {mode === "signup" && (
-                  <Input
-                    type="password"
-                    placeholder="Confirmer le mot de passe"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    disabled={isLoading}
-                  />
-                )}
-                <Button type="submit" className="w-full gap-2" disabled={isLoading}>
-                  <Mail className="h-4 w-4" />
-                  {isLoading
-                    ? "Chargement..."
-                    : mode === "login"
-                    ? "Se connecter"
-                    : "Créer le compte"}
-                </Button>
-              </form>
+              {/* Login Form */}
+              {mode === "login" && (
+                <form onSubmit={handleLoginSubmit(handleLogin)} className="space-y-3">
+                  <div>
+                    <Input
+                      type="email"
+                      placeholder="Email"
+                      disabled={isLoading}
+                      {...loginRegister("email")}
+                    />
+                    {loginErrors.email && (
+                      <p className="mt-1 text-xs text-destructive">
+                        {loginErrors.email.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Input
+                      type="password"
+                      placeholder="Mot de passe"
+                      disabled={isLoading}
+                      {...loginRegister("password")}
+                    />
+                    {loginErrors.password && (
+                      <p className="mt-1 text-xs text-destructive">
+                        {loginErrors.password.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <Button type="submit" className="w-full gap-2" disabled={isLoading}>
+                    <Mail className="h-4 w-4" />
+                    {isLoading ? "Chargement..." : "Se connecter"}
+                  </Button>
+                </form>
+              )}
+
+              {/* Signup Form */}
+              {mode === "signup" && (
+                <form onSubmit={handleSignupSubmit(handleSignup)} className="space-y-3">
+                  <div>
+                    <Input
+                      type="email"
+                      placeholder="Email"
+                      disabled={isLoading}
+                      {...signupRegister("email")}
+                    />
+                    {signupErrors.email && (
+                      <p className="mt-1 text-xs text-destructive">
+                        {signupErrors.email.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Input
+                      type="password"
+                      placeholder="Mot de passe"
+                      disabled={isLoading}
+                      {...signupRegister("password")}
+                    />
+                    {signupErrors.password && (
+                      <p className="mt-1 text-xs text-destructive">
+                        {signupErrors.password.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Input
+                      type="password"
+                      placeholder="Confirmer le mot de passe"
+                      disabled={isLoading}
+                      {...signupRegister("confirmPassword")}
+                    />
+                    {signupErrors.confirmPassword && (
+                      <p className="mt-1 text-xs text-destructive">
+                        {signupErrors.confirmPassword.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <Button type="submit" className="w-full gap-2" disabled={isLoading}>
+                    <Mail className="h-4 w-4" />
+                    {isLoading ? "Chargement..." : "Créer le compte"}
+                  </Button>
+                </form>
+              )}
 
               {/* Toggle mode */}
               <div className="text-center">
                 <button
                   type="button"
-                  onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                  onClick={switchMode}
                   className="text-sm text-muted-foreground hover:text-primary"
                 >
                   {mode === "login"
