@@ -10,6 +10,8 @@ import { useExerciseStore } from "@/stores/exercise-store";
 import { useWorkoutStore } from "@/stores/workout-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { Toaster } from "@/components/ui/sonner";
+import { WebVitalsReporter } from "@/components/analytics/web-vitals";
+import { Analytics } from "@vercel/analytics/react";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -55,6 +57,8 @@ export function Providers({ children }: ProvidersProps) {
     <>
       {children}
       <Toaster position="top-center" richColors />
+      <WebVitalsReporter />
+      <Analytics />
     </>
   );
 }
