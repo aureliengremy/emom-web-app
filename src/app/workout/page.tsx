@@ -40,6 +40,7 @@ export default function WorkoutPage() {
   const { playBeep, playStart, playComplete, playWarning } = useSound();
   const lastSecondsRef = useRef(60);
   const lastPauseSecondsRef = useRef(0);
+  const wasPausingRef = useRef(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Démarrer le workout si pas encore commencé
@@ -91,6 +92,12 @@ export default function WorkoutPage() {
         }
         lastPauseSecondsRef.current = pauseSeconds;
       }
+
+      // Son de reprise quand la pause entre sets se termine
+      if (wasPausingRef.current && !currentTimer.isPausingBetweenSets) {
+        playStart();
+      }
+      wasPausingRef.current = currentTimer.isPausingBetweenSets;
 
       if (result.workoutComplete) {
         playComplete();
