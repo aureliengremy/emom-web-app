@@ -1,5 +1,106 @@
 # EMOM Web App - Todo List
 
+## En cours : Sauvegarde automatique + Édition historique
+
+### Problèmes à résoudre
+
+1. **Perte de workout au refresh** : Quand le workout se termine et l'utilisateur est sur `/workout/complete`, si l'app se rafraîchit (ex: app rouverte en arrière-plan), le `currentWorkout` est perdu car Zustand ne persiste pas en mémoire. L'utilisateur est redirigé vers l'accueil sans sauvegarde.
+
+2. **Pas d'édition de l'historique** : Actuellement il n'est pas possible de modifier le commentaire/ressenti d'une session passée depuis l'historique.
+
+### Plan d'action
+
+#### Tâche 1 : Sauvegarde automatique dès fin de workout
+- [x] Modifier `tick()` dans `workout-store.ts` pour sauvegarder automatiquement le workout dès que `workoutComplete: true`
+- [x] Le workout sera sauvegardé avec `rating: undefined` et `notes: undefined` par défaut
+- [x] La page `/workout/complete` utilise maintenant `updateWorkoutFeedback` pour mettre à jour le workout déjà sauvegardé
+
+#### Tâche 2 : Édition du feedback depuis l'historique
+- [x] Ajouter fonction `updateWorkoutFeedback(workoutId, rating, notes)` dans `workout-store.ts`
+- [x] Ajouter fonction `updateSupabaseWorkoutFeedback()` dans `data-service.ts` (mise à jour partielle)
+- [x] Créer modale d'édition dans la page historique (rating + notes uniquement, pas les détails du workout)
+- [x] Ajouter bouton "Modifier le ressenti" sur les cartes de workout dans l'historique
+
+### Fichiers modifiés
+
+| Fichier | Modification |
+|---------|--------------|
+| `src/stores/workout-store.ts` | +`autoSaveWorkout()`, +`updateWorkoutFeedback()`, modif `tick()` |
+| `src/lib/supabase/data-service.ts` | +`updateSupabaseWorkoutFeedback()` |
+| `src/app/history/page.tsx` | +Modale d'édition, +bouton "Modifier le ressenti" sur chaque carte |
+| `src/app/workout/complete/page.tsx` | Utilise `updateWorkoutFeedback` au lieu de `finishWorkout` |
+
+### Revue des changements
+
+**Sauvegarde automatique :**
+- Quand le timer atteint `workoutComplete: true`, la fonction `autoSaveWorkout()` est appelée
+- Le workout est sauvegardé en base avec `rating: undefined` et `notes: undefined`
+- L'utilisateur peut ensuite ajouter son ressenti sur la page de résumé
+- Si l'app se rafraîchit, le workout est déjà sauvegardé dans l'historique
+
+**Édition de l'historique :**
+- Chaque carte de workout a un bouton "Modifier le ressenti"
+- Une modale permet de changer uniquement le rating (emoji) et les notes
+- Les détails du workout (exercices, reps, durée) ne sont pas modifiables
+- L'update est optimiste avec rollback en cas d'erreur
+
+---
+
+## Terminé : Section 3 - Data Mutation (Checklist Frontend)
+
+### 3.1 Forms (MVP) ✅
+
+- [x] Installer React Hook Form + Zod + @hookform/resolvers
+- [x] Créer les schémas de validation Zod (`src/lib/validations/index.ts`)
+  - [x] `loginSchema` / `signupSchema` - Email, password, confirmPassword
+  - [x] `exerciseSchema` - Nom, catégorie, max
+  - [x] `sessionSchema` / `sessionSetSchema` - Nom, description, sets
+  - [x] `workoutFeedbackSchema` / `setFeedbackSchema` - Rating, notes
+- [x] Refactorer les formulaires avec React Hook Form
+  - [x] `auth/login/page.tsx` - useForm + zodResolver pour login/signup
+  - [x] `add-exercise-modal.tsx` - useForm + Controller pour catégorie
+  - [x] `sessions/create/page.tsx` - useForm + useFieldArray pour sets
+  - [x] `workout/complete/page.tsx` - Validation manuelle (pas de form complet)
+- [x] Messages d'erreur utilisateur cohérents (FR)
+
+### 3.2 Real-time Updates (V2) - N/A
+
+Pas de real-time requis pour le MVP. L'app fonctionne en mode request/response classique.
+À considérer pour le futur : synchronisation multi-device des workouts.
+
+### 3.3 Optimistic Updates (V1) ✅
+
+Implémenté dans les mutations suivantes :
+
+| Mutation | Fichier | Optimistic | Rollback |
+|----------|---------|------------|----------|
+| `updateWorkoutFeedback` | `workout-store.ts` | ✅ | ✅ |
+| `deleteWorkoutFromHistory` | `workout-store.ts` | ✅ | ✅ |
+| `deleteExercise` | `exercise-store.ts` | ✅ | ✅ |
+
+**Stratégie :**
+1. Mise à jour immédiate du state local
+2. Appel API en arrière-plan
+3. Rollback si erreur avec état précédent sauvegardé
+
+### Formulaires avec React Hook Form + Zod
+
+| Fichier | useForm | zodResolver | Erreurs FR |
+|---------|---------|-------------|------------|
+| `auth/login/page.tsx` | ✅ | ✅ | ✅ |
+| `add-exercise-modal.tsx` | ✅ | ✅ | ✅ |
+| `sessions/create/page.tsx` | ✅ | ✅ | ✅ |
+| `workout/complete/page.tsx` | ❌ | ❌ | ✅ (manuel) |
+| `settings/page.tsx` | N/A | N/A | N/A |
+
+---
+
+## Historique (sections précédentes)
+
+Voir les sections "Terminé" ci-dessous pour l'historique complet.
+
+---
+
 ## Terminé : Exercices présets partagés en DB
 
 ### Tâches complétées
@@ -62,267 +163,33 @@
 - [x] Changer l'ID "dips" en "dip"
 - [x] Mettre à jour les tests
 
-### Revue des changements
-
-**Fichiers modifiés :**
-- `src/types/index.ts` : Ajout `AppLanguage`, champ `language` dans `UserSettings`
-- `src/data/emom-tables.ts` : 41 exercices avec `nameFr`/`nameEn`, helpers bilingues
-- `src/stores/exercise-store.ts` : Génération UUID pour Supabase, vérification par nom
-- `src/stores/settings-store.ts` : Ajout `language: "fr"` par défaut
-- `src/lib/db.ts` : Ajout `language: "fr"` dans DEFAULT_SETTINGS
-- `src/lib/supabase/data-service.ts` : Mapping du champ `language`
-- `src/app/settings/page.tsx` : Sélecteur de langue
-- `src/app/exercises/page.tsx` : Recherche, filtres, collapsibles
-- `src/components/exercises/exercise-card.tsx` : Utilisation de la langue
-- `src/data/emom-tables.test.ts` : Tests mis à jour pour noms singuliers
-- `src/components/exercises/exercise-card.test.tsx` : Tests mis à jour
-
-**Migration Supabase requise :**
-```sql
-ALTER TABLE user_settings ADD COLUMN language TEXT DEFAULT 'fr';
-```
-
 ---
 
 ## Terminé : Exercices avec variantes + Feedback fin de workout
 
-### Tâches complétées
-
-#### 0. Bug fix : Exercices custom non chargés depuis Supabase
-- [x] Corriger la race condition dans `providers.tsx` : initialiser l'auth AVANT de charger les exercices
-  - Cause : `initializePresets()` était appelé avant `auth.initialize()`, donc `user` était toujours `null`
-  - Fix : Appeler `initializeAuth()` EN PREMIER dans `Providers`, puis charger les exercices
-
-#### 1. Refonte du système d'exercices
-
-**1.1 Nouveau modèle de données**
-- [x] Ajouter un type `ExerciseDifficulty` : "novice" | "classique" | "intermediaire" | "avance" | "expert"
-- [x] Créer un type `ExerciseFamily` (ex: "pushup", "pullup", "squat"...)
-- [x] Ajouter `family` et `difficulty` au type `Exercise`
-
-**1.2 Nouvelle liste d'exercices (basée sur exercices.md)**
-- [x] Refactorer `PRESET_EXERCISES` dans `emom-tables.ts` avec les nouvelles familles
-- [x] Ajouter toutes les variantes : Push (Push-up, Pike Push-up, HSPU), Pull (Row, Pull-up, Chin-up, Muscle-up), Legs (Squat, Hinge), Core
-- [x] Mapper chaque variante à son niveau de difficulté (44 exercices au total)
-
-**1.3 Sélecteur de niveau dans l'UI**
-- [x] Modifier `exercise-card.tsx` pour afficher la famille et le niveau de difficulté
-- [x] Ajouter des helpers : `getDifficultyColor()`, `getDifficultyLabel()`, `getFamilyLabel()`
-- [x] Page exercices : grouper par famille, trier par difficulté
-- [x] Filtrer les exercices par catégorie (Push/Pull/Legs/Core)
-
-#### 2. Feedback par exercice en fin de workout
-
-**2.1 Modèle de données**
-- [x] Ajouter un type `SetFeedback` : { rating?: WorkoutRating, comment?: string }
-- [x] Ajouter `feedback?: SetFeedback` au type `WorkoutSet`
-- [x] Ajouter `updateSetFeedback()` dans le workout-store
-
-**2.2 UI page fin de workout**
-- [x] Ajouter une section "Feedback par exercice" dans `workout/complete/page.tsx`
-- [x] Cards extensibles pour chaque exercice
-- [x] Pour chaque set : rating emoji + champ commentaire optionnel
-- [x] Sauvegarder le feedback dans le workout
-
-### Revue des changements
-
-**Fichiers modifiés :**
-- `src/types/index.ts` : Ajout de `ExerciseDifficulty`, `ExerciseFamily`, `SetFeedback`, mise à jour de `Exercise` et `WorkoutSet`
-- `src/data/emom-tables.ts` : 44 exercices présets avec famille et difficulté, nouveaux helpers
-- `src/components/providers.tsx` : Initialisation auth AVANT les exercices (fix race condition)
-- `src/app/page.tsx` : Simplification du flow d'auth
-- `src/components/exercises/exercise-card.tsx` : Affichage famille et niveau de difficulté
-- `src/app/exercises/page.tsx` : Groupement par famille, filtres par catégorie
-- `src/stores/workout-store.ts` : Ajout `updateSetFeedback()`
-- `src/stores/exercise-store.ts` : Support des nouveaux champs family/difficulty
-- `src/lib/supabase/data-service.ts` : Mapping des nouveaux champs DB
-- `src/app/workout/complete/page.tsx` : Feedback par exercice
-
-**Note importante :**
-Pour que les nouveaux champs `family` et `difficulty` fonctionnent avec Supabase, il faut ajouter ces colonnes à la table `exercises` :
-```sql
-ALTER TABLE exercises ADD COLUMN family TEXT;
-ALTER TABLE exercises ADD COLUMN difficulty TEXT;
-```
+- [x] Bug fix : Race condition auth/exercices
+- [x] Nouveau modèle de données (family, difficulty)
+- [x] 44 exercices présets
+- [x] Sélecteur de niveau dans l'UI
+- [x] Feedback par exercice en fin de workout
 
 ---
 
 ## Terminé : Infrastructure de tests
 
-### Tests unitaires (Vitest)
-- [x] Configuration Vitest avec React Testing Library
-- [x] Tests `emom-tables.ts` : 41 exercices présets, helpers, niveaux
-- [x] Tests `types/index.ts` : fonctions de label et couleur
-- [x] Tests `workout-store.ts` : actions Zustand, feedback
-- [x] Tests composants : `exercise-card.tsx`
-
-### Tests E2E (Playwright)
-- [x] Configuration Playwright (chromium + Mobile Chrome)
-- [x] Tests navigation : home, exercises, sessions, settings
-- [x] Tests page exercices : filtres, catégories, reset
-- [x] Tests page login : formulaire, mode invité
-
-**Commandes disponibles :**
-```bash
-npm run test          # Vitest watch mode
-npm run test:run      # Vitest single run
-npm run test:coverage # Vitest avec couverture
-npm run test:e2e      # Playwright headless
-npm run test:e2e:ui   # Playwright UI mode
-```
-
-**Fichiers créés :**
-- `vitest.config.ts`
-- `src/test/setup.ts`
-- `src/data/emom-tables.test.ts`
-- `src/types/index.test.ts`
-- `src/stores/workout-store.test.ts`
-- `src/components/exercises/exercise-card.test.tsx`
-- `playwright.config.ts`
-- `e2e/navigation.spec.ts`
+- [x] Tests unitaires (Vitest) - 49 tests
+- [x] Tests E2E (Playwright) - 15 tests
 
 ---
 
-## Terminé : Améliorations page Historique + Sécurité
+## Terminé : Améliorations + Sécurité + SEO + Error Handling
 
-### Tâches complétées
-
-- [x] Supprimer les blocs de debug
-- [x] Implémenter `deleteSupabaseWorkout`
-- [x] Corriger le chargement des workouts (race condition)
-- [x] Corriger le chart qui ne s'affichait pas
-- [x] Ajouter card pour utilisateurs non connectés
-- [x] Revue de sécurité complète
-- [x] Corriger vulnérabilité Open Redirect (OAuth callback)
-- [x] Ajouter paramètre `tab` sur la page login
-
----
-
-## Terminé : SEO, Infrastructure, Accessibilité (Audit 5.x)
-
-### Tâches complétées
-
-- [x] Open Graph tags + Twitter cards
-- [x] Meta robots
-- [x] CDN, Caching, Compression (Vercel)
-- [x] Deploy preview + production (Vercel)
-- [x] HTML sémantique (header, main)
-- [x] Accessibilité Radix UI (keyboard nav, ARIA)
-
-### Résultat
-
-**Production Readiness : 18/18 (100%)**
-
----
-
-## Terminé : Bundle Size & npm Audit (Audit 4.2.2, 5.6.4)
-
-### Tâches complétées
-
-- [x] npm audit — 0 vulnérabilités
-- [x] Build production et analyse bundle size
-
-### Résultats
-
-| Métrique | Valeur |
-|----------|--------|
-| Vulnérabilités npm | 0 |
-| Assets statiques | 2.6 MB |
-| Plus gros chunks | ~400 KB (Recharts, Framer Motion) |
-
-### Note
-
-La taille du bundle est acceptable. Les gros chunks sont des dépendances tierces nécessaires (graphiques, animations).
-
----
-
-## Terminé : Security Headers (Audit 5.6.2)
-
-### Tâches complétées
-
-- [x] Configurer CSP headers dans next.config.ts
-- [x] Ajouter headers de sécurité supplémentaires
-
-### Headers configurés
-
-| Header | Valeur |
-|--------|--------|
-| Content-Security-Policy | Restreint sources scripts, styles, images, fonts, connexions |
-| X-Frame-Options | DENY (anti-clickjacking) |
-| X-Content-Type-Options | nosniff (anti-MIME sniffing) |
-| Referrer-Policy | strict-origin-when-cross-origin |
-| Permissions-Policy | Désactive camera, microphone, geolocation |
-
-### CSP autorise
-
-- Scripts/styles: self + inline (Next.js)
-- Images: self, blob, data, https
-- Connexions: self + *.supabase.co (API + WebSocket)
-
----
-
-## Terminé : Skeletons de chargement (Audit 4.1.x)
-
-### Tâches complétées
-
-- [x] Vérifier composant Skeleton existant (shadcn/ui)
-- [x] Ajouter skeletons à la page exercices
-- [x] Vérifier skeletons page historique (déjà implémenté)
-
-### Pages avec skeletons
-
-- `src/app/exercises/page.tsx` — Skeletons pendant chargement des exercices
-- `src/app/history/page.tsx` — Skeletons déjà implémentés
-
-### Checklist mise à jour
-
-- [x] 4.1.1 Skeleton screens implémentés
-- [x] 4.1.2 Loading indicators cohérents
-
----
-
-## Terminé : DevTools Zustand (Audit 1.2.2)
-
-### Tâches complétées
-
-- [x] Ajouter middleware `devtools` à tous les stores Zustand
-
-### Stores mis à jour
-
-- `auth-store.ts` — AuthStore
-- `exercise-store.ts` — ExerciseStore
-- `session-store.ts` — SessionStore
-- `settings-store.ts` — SettingsStore
-- `workout-store.ts` — WorkoutStore
-
-### Note
-
-DevTools activés uniquement en mode développement (`NODE_ENV === "development"`).
-Pour visualiser : installer l'extension Redux DevTools dans Chrome/Firefox.
-
----
-
-## Terminé : Error Handling (Audit 5.8.x)
-
-> Priorité 🔴 — Actions critiques identifiées par l'audit Frontend Architect
-
-### Tâches complétées
-
-- [x] Créer `app/error.tsx` — Error Boundary pour erreurs runtime
-- [x] Créer `app/not-found.tsx` — Page 404 personnalisée
-- [x] Créer `app/global-error.tsx` — Fallback pour erreurs critiques
-
-### Fichiers créés
-
-- `src/app/error.tsx` — Error Boundary avec boutons Réessayer/Accueil
-- `src/app/not-found.tsx` — Page 404 avec navigation
-- `src/app/global-error.tsx` — Fallback minimaliste pour erreurs critiques
-
-### Checklist mise à jour
-
-- [x] 5.8.1 Error Boundary global
-- [x] 5.8.2 Pages 404/500 personnalisées
-- [x] 5.8.3 Recovery UI (retry, refresh)
+- [x] Error Boundaries (error.tsx, not-found.tsx, global-error.tsx)
+- [x] Security Headers (CSP)
+- [x] Skeletons de chargement
+- [x] DevTools Zustand
+- [x] Open Graph / Twitter cards
+- [x] npm audit (0 vulnérabilités)
 
 ---
 
@@ -333,55 +200,13 @@ Pour visualiser : installer l'extension Redux DevTools dans Chrome/Firefox.
 - [ ] Toast de confirmation après suppression
 - [ ] Pull-to-refresh sur mobile
 
-### Sécurité (priorité moyenne)
-- [ ] Validation des données utilisateur avec Zod
-- [ ] Renforcer les exigences de mot de passe (8+ caractères, majuscule, chiffre)
-- [ ] Ajouter rate limiting (Supabase + middleware)
-- [ ] Contraintes JSONB sur les champs sets/current_emom
-
----
-
-## Améliorations futures suggérées
-
-### Fonctionnalités
-- [ ] Export des données (CSV/JSON)
-- [ ] Partage de workout
-- [ ] Comparaison de progression entre périodes
-- [ ] Objectifs personnalisés
-
 ### Technique
-- [x] Tests unitaires (Vitest) - 47 tests
-- [x] Tests E2E (Playwright) - 15 tests
+- [ ] Lazy loading des charts
+- [ ] Core Web Vitals
 - [ ] Monitoring (Sentry)
-- [ ] PWA améliorée (offline mode)
+- [ ] PWA améliorée
 
-### Performance (audit 2026-01-12)
-- [x] Supprimer `framer-motion` (inutilisé, ~400KB)
-- [ ] Lazy loading des charts avec `next/dynamic`
-- [ ] Mesurer Core Web Vitals
-
----
-
-## Terminé (historique)
-
-- [x] Timer EMOM avec sets configurables
-- [x] Gestion des exercices (preset + custom)
-- [x] Historique des workouts
-- [x] Graphiques de progression (Recharts)
-- [x] Supabase (DB + RLS)
-- [x] Auth email/mot de passe
-- [x] Déploiement Vercel
-- [x] Page de login au lancement
-- [x] Pause pendant les trainings
-- [x] Countdown 10s avant séance
-- [x] Notes par training
-- [x] Sens du chrono (horaire)
-- [x] Nettoyage page Historique
-- [x] Card utilisateurs non connectés
-- [x] Revue de sécurité
-- [x] Exercices avec familles et niveaux de difficulté
-- [x] Feedback par exercice en fin de workout
-- [x] Tests unitaires (Vitest) - 49 tests
-- [x] Tests E2E (Playwright) - 15 tests
-- [x] Support bilingue FR/EN pour les exercices
-- [x] Page exercices améliorée (recherche, filtres, collapsibles)
+### Fonctionnalités futures
+- [ ] Export des données
+- [ ] Partage de workout
+- [ ] Comparaison de progression
