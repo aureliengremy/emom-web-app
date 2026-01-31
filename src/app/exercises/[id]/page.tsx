@@ -14,7 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useExerciseStore } from "@/stores/exercise-store";
 import { useWorkoutStore } from "@/stores/workout-store";
+import { useAuthStore } from "@/stores/auth-store";
 import { getExerciseLevel, getLevelColor } from "@/data/emom-tables";
+import { ExerciseStatsCard } from "@/components/exercises/exercise-stats-card";
 import { formatDate } from "@/types";
 import {
   ArrowLeft,
@@ -39,6 +41,7 @@ export default function ExerciseDetailPage() {
   const updateMax = useExerciseStore((s) => s.updateMax);
   const deleteExercise = useExerciseStore((s) => s.deleteExercise);
   const workoutHistory = useWorkoutStore((s) => s.workoutHistory);
+  const user = useAuthStore((s) => s.user);
 
   const [newMax, setNewMax] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
@@ -203,6 +206,11 @@ export default function ExerciseDetailPage() {
               <LazyRepsBarChart data={chartData} weeks={8} />
             </CardContent>
           </Card>
+        )}
+
+        {/* Section Progression - uniquement si connecte et donnees disponibles */}
+        {user && workoutHistory.length > 0 && (
+          <ExerciseStatsCard workouts={workoutHistory} exerciseId={id} />
         )}
 
         {/* Test du max */}
