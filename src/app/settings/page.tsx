@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { ExportSection } from "@/components/settings/export-section";
 import { PAUSE_DURATIONS, EMOM_DURATIONS } from "@/types";
 import {
   ArrowLeft,
@@ -271,6 +272,9 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Section export des données */}
+        {isInitialized && user && <ExportSection />}
 
         {/* Info version */}
         <div className="text-center text-sm text-muted-foreground">
