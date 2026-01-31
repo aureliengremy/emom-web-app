@@ -13,6 +13,7 @@ import {
   saveSavedSession,
   deleteSavedSession,
 } from "@/lib/supabase/data-service";
+import { toast } from "sonner";
 
 interface SessionState {
   plannedSets: PlannedSet[];
@@ -178,9 +179,11 @@ export const useSessionStore = create<SessionState>()(
 
     try {
       await deleteSavedSession(sessionId);
+      toast.success("Session supprimée");
     } catch (error) {
       // Rollback en cas d'erreur
       set({ savedSessions: previousSessions });
+      toast.error("Erreur lors de la suppression");
       console.error("Error deleting session:", error);
       throw error;
     }

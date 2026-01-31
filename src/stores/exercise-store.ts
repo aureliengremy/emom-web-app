@@ -23,6 +23,7 @@ import {
   calculateRecommendedEMOM,
 } from "@/data/emom-tables";
 import { useAuthStore } from "./auth-store";
+import { toast } from "sonner";
 
 interface ExerciseState {
   exercises: Exercise[];
@@ -232,9 +233,11 @@ export const useExerciseStore = create<ExerciseState>()(
       } else {
         await deleteLocalExercise(id);
       }
+      toast.success("Exercice supprimé");
     } catch (error) {
       // Rollback en cas d'erreur
       set({ exercises: previousExercises });
+      toast.error("Erreur lors de la suppression");
       throw error;
     }
   },

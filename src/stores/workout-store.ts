@@ -29,6 +29,7 @@ import {
   updateSupabaseWorkoutFeedback,
 } from "@/lib/supabase/data-service";
 import { useAuthStore } from "./auth-store";
+import { toast } from "sonner";
 
 // Helper pour vérifier si l'utilisateur est connecté
 function getAuthUser() {
@@ -131,9 +132,11 @@ export const useWorkoutStore = create<WorkoutState>()(
       } else {
         await deleteLocalWorkout(id);
       }
+      toast.success("Séance supprimée");
     } catch (error) {
       // Rollback en cas d'erreur
       set({ workoutHistory: previousWorkouts });
+      toast.error("Erreur lors de la suppression");
       throw error;
     }
   },
