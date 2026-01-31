@@ -4,8 +4,9 @@
 // Page historique des séances
 // ============================================
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { Container, Header, Main } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +18,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { VolumeAreaChart } from "@/components/charts/volume-area-chart";
+
+// Lazy load du chart pour améliorer le temps de chargement initial
+// (recharts est une librairie lourde ~150kb)
+const VolumeAreaChart = dynamic(
+  () => import("@/components/charts/volume-area-chart").then((mod) => mod.VolumeAreaChart),
+  {
+    loading: () => (
+      <div className="flex h-[200px] w-full items-center justify-center">
+        <div className="h-[200px] w-full animate-pulse rounded-lg bg-muted" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
 import { useWorkoutStore } from "@/stores/workout-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { formatDate, formatDuration, type WorkoutRating, type Workout } from "@/types";
@@ -39,6 +53,7 @@ import {
   X,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { cn } from "@/lib/utils";
 
 const RATING_COLORS = {
@@ -105,6 +120,11 @@ export default function HistoryPage() {
       setIsSaving(false);
     }
   };
+
+  // Pull-to-refresh handler
+  const handleRefresh = useCallback(async () => {
+    await loadWorkouts();
+  }, [loadWorkouts]);
 
   // Initialiser l'auth puis charger les workouts
   useEffect(() => {
@@ -309,6 +329,7 @@ export default function HistoryPage() {
       </Header>
 
       <Main>
+        <PullToRefresh onRefresh={handleRefresh}>
         {/* Section Chart */}
         {totalWorkouts > 0 && exercises.length > 0 && (
           <Card className="mb-6">
@@ -436,7 +457,7 @@ export default function HistoryPage() {
         {sortedHistory.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {sortedHistory.map((workout) => (
-              <Card key={workout.id}>
+              <Card key={workout.id} className="transition-all hover:shadow-md hover:scale-[1.01]">
                 <CardContent className="p-4">
                   <div className="mb-3 flex items-start justify-between">
                     <div className="flex items-center gap-2">
@@ -532,6 +553,7 @@ export default function HistoryPage() {
             </Link>
           </div>
         )}
+        </PullToRefresh>
 
         {/* Modale d'édition du feedback */}
         {editingWorkout && (
@@ -562,10 +584,10 @@ export default function HistoryPage() {
                         key={option.value}
                         onClick={() => setEditRating(option.value)}
                         className={cn(
-                          "flex flex-col items-center gap-1 rounded-xl p-3 transition-all",
+                          "flex flex-col items-center gap-1 rounded-xl p-3 transition-all active:scale-95",
                           editRating === option.value
-                            ? "bg-primary/20 ring-2 ring-primary"
-                            : "bg-muted hover:bg-muted/80"
+                            ? "bg-primary/20 ring-2 ring-primary scale-105"
+                            : "bg-muted hover:bg-muted/80 hover:scale-105"
                         )}
                       >
                         <span className="text-2xl">{option.emoji}</span>
