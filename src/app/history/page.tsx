@@ -20,7 +20,7 @@ import {
 import { VolumeAreaChart } from "@/components/charts/volume-area-chart";
 import { useWorkoutStore } from "@/stores/workout-store";
 import { useAuthStore } from "@/stores/auth-store";
-import { formatDate, formatDuration } from "@/types";
+import { formatDate, formatDuration, type WorkoutRating, type Workout } from "@/types";
 import {
   getUniqueExercises,
   aggregateVolumeByDay,
@@ -35,6 +35,8 @@ import {
   Repeat,
   Star,
   TrendingUp,
+  Pencil,
+  X,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -54,7 +56,7 @@ const RATING_LABELS = {
 type Granularity = "day" | "week" | "month";
 
 export default function HistoryPage() {
-  const { workoutHistory, isLoaded, loadWorkouts } = useWorkoutStore();
+  const { workoutHistory, isLoaded, loadWorkouts, updateWorkoutFeedback } = useWorkoutStore();
   const { isInitialized, initialize, user } = useAuthStore();
 
   // États pour le chart
@@ -63,6 +65,46 @@ export default function HistoryPage() {
 
   // États pour les filtres de la liste
   const [exerciseFilters, setExerciseFilters] = useState<string[]>([]);
+
+  // États pour la modale d'édition
+  const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
+  const [editRating, setEditRating] = useState<WorkoutRating | undefined>(undefined);
+  const [editNotes, setEditNotes] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const MAX_NOTES_LENGTH = 1000;
+
+  const RATING_OPTIONS: { value: WorkoutRating; emoji: string; label: string }[] = [
+    { value: "easy", emoji: "😊", label: "Facile" },
+    { value: "medium", emoji: "😐", label: "Moyen" },
+    { value: "hard", emoji: "🥵", label: "Dur" },
+  ];
+
+  const openEditModal = (workout: Workout) => {
+    setEditingWorkout(workout);
+    setEditRating(workout.rating);
+    setEditNotes(workout.notes || "");
+  };
+
+  const closeEditModal = () => {
+    setEditingWorkout(null);
+    setEditRating(undefined);
+    setEditNotes("");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingWorkout) return;
+
+    setIsSaving(true);
+    try {
+      await updateWorkoutFeedback(editingWorkout.id, editRating, editNotes.trim() || undefined);
+      closeEditModal();
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Initialiser l'auth puis charger les workouts
   useEffect(() => {
@@ -449,6 +491,17 @@ export default function HistoryPage() {
                       &ldquo;{workout.notes}&rdquo;
                     </p>
                   )}
+
+                  {/* Bouton modifier */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-3 w-full gap-2"
+                    onClick={() => openEditModal(workout)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Modifier le ressenti
+                  </Button>
                 </CardContent>
               </Card>
             ))}
@@ -477,6 +530,92 @@ export default function HistoryPage() {
             <Link href="/" className="mt-4">
               <Button>Démarrer une séance</Button>
             </Link>
+          </div>
+        )}
+
+        {/* Modale d'édition du feedback */}
+        {editingWorkout && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <Card className="w-full max-w-md">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Modifier le ressenti</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={closeEditModal}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {formatDate(editingWorkout.date)}
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Rating */}
+                <div>
+                  <p className="mb-2 text-sm font-medium">Ressenti</p>
+                  <div className="flex justify-center gap-4">
+                    {RATING_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setEditRating(option.value)}
+                        className={cn(
+                          "flex flex-col items-center gap-1 rounded-xl p-3 transition-all",
+                          editRating === option.value
+                            ? "bg-primary/20 ring-2 ring-primary"
+                            : "bg-muted hover:bg-muted/80"
+                        )}
+                      >
+                        <span className="text-2xl">{option.emoji}</span>
+                        <span className="text-xs">{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-sm font-medium">Notes (optionnel)</p>
+                    <span className="text-xs text-muted-foreground">
+                      {editNotes.length}/{MAX_NOTES_LENGTH}
+                    </span>
+                  </div>
+                  <textarea
+                    value={editNotes}
+                    onChange={(e) => {
+                      if (e.target.value.length <= MAX_NOTES_LENGTH) {
+                        setEditNotes(e.target.value);
+                      }
+                    }}
+                    placeholder="Ressenti général, forme du jour..."
+                    className="w-full rounded-lg bg-muted p-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    rows={3}
+                  />
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={closeEditModal}
+                    disabled={isSaving}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={handleSaveEdit}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? "Sauvegarde..." : "Enregistrer"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </Main>
