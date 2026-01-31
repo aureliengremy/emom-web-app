@@ -473,6 +473,59 @@ The EMOM app has a **solid foundation** for Core Web Vitals:
 
 ---
 
+## Termine : Sauvegarde complete (Full Backup)
+
+### Fonctionnalites ajoutees
+
+- [x] Fonction `prepareFullBackup(workouts, exercises, sessions, settings?)` dans `export-utils.ts`
+- [x] Metadonnees enrichies : `exportDate`, `appVersion`, `dataTypes[]`, `counts{}`
+- [x] Section "Sauvegarde complete" mise en avant dans les parametres (style primaire)
+- [x] Resume visuel des donnees a exporter (badges avec icones)
+- [x] Exports individuels (seances, exercices, sessions JSON/CSV)
+
+### Structure du fichier de sauvegarde
+
+```json
+{
+  "metadata": {
+    "exportDate": "2026-01-30T...",
+    "appVersion": "1.0.0",
+    "dataTypes": ["workouts", "exercises", "sessions", "settings"],
+    "counts": {
+      "workouts": 15,
+      "exercises": 44,
+      "sessions": 3
+    }
+  },
+  "workouts": [...],
+  "exercises": [...],
+  "sessions": [...],
+  "settings": {...}
+}
+```
+
+### Fichiers modifies
+
+| Fichier | Modification |
+|---------|--------------|
+| `src/lib/export-utils.ts` | +`FullBackup` type, +`prepareFullBackup()`, +`prepareSessionExport()`, +CSV utils |
+| `src/components/settings/export-section.tsx` | Refonte avec sauvegarde complete en haut + exports individuels |
+
+### UI de la section export
+
+1. **Sauvegarde complete** (en haut, style primaire avec bordure coloree)
+   - Icone Database
+   - Resume des donnees a exporter (badges: X seances, Y exercices, Z sessions)
+   - Bouton principal "Telecharger la sauvegarde complete"
+
+2. **Export individuel** (section secondaire)
+   - Boutons pour exporter separement seances et exercices
+
+3. **Mes sessions sauvegardees** (section tertiaire)
+   - Boutons JSON et CSV cote a cote
+
+---
+
 ## À faire (backlog)
 
 ### UX/UI
@@ -487,6 +540,6 @@ The EMOM app has a **solid foundation** for Core Web Vitals:
 - [x] PWA améliorée (icons PNG, manifest enrichi, meta tags)
 
 ### Fonctionnalités futures
-- [ ] Export des données
+- [x] Export des données
 - [ ] Partage de workout
 - [ ] Comparaison de progression
