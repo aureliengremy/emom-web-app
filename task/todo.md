@@ -1,6 +1,142 @@
 # EMOM Web App - Todo List
 
-## En cours : Sauvegarde automatique + Édition historique
+## Terminé : Pull-to-refresh sur mobile
+
+### Plan d'action
+
+- [x] Créer composant `PullToRefresh` dans `src/components/ui/pull-to-refresh.tsx`
+- [x] Utiliser touch events (touchstart, touchmove, touchend)
+- [x] Indicateur de chargement avec rotation pendant le pull
+- [x] Callback `onRefresh` pour déclencher le rafraîchissement
+- [x] Vérifier le support tactile (mobile uniquement)
+- [x] Intégrer sur la page historique (`/history`)
+
+### Fichiers ajoutés/modifiés
+
+| Fichier | Modification |
+|---------|--------------|
+| `src/components/ui/pull-to-refresh.tsx` | Nouveau composant PullToRefresh |
+| `src/app/history/page.tsx` | Intégration du PullToRefresh autour du contenu |
+
+### Fonctionnalités du composant
+
+- Fonctionne uniquement sur appareils tactiles (detecte `ontouchstart` ou `navigator.maxTouchPoints`)
+- Se déclenche seulement quand on est en haut de la page (`window.scrollY === 0`)
+- Indicateur visuel avec icône Loader2 qui tourne pendant le pull
+- Seuil configurable (defaut 80px) pour déclencher le refresh
+- Résistance au pull (0.4x) pour un effet naturel
+- Animation de transition fluide avec Tailwind
+
+### Usage
+
+```tsx
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
+
+const handleRefresh = async () => {
+  await loadData();
+};
+
+<PullToRefresh onRefresh={handleRefresh}>
+  {/* Contenu de la page */}
+</PullToRefresh>
+```
+
+### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `children` | `ReactNode` | - | Contenu à wrapper |
+| `onRefresh` | `() => Promise<void>` | - | Callback async appelé au refresh |
+| `threshold` | `number` | 80 | Distance en px pour déclencher le refresh |
+| `disabled` | `boolean` | false | Désactiver le pull-to-refresh |
+| `className` | `string` | - | Classes CSS additionnelles |
+
+---
+
+## Terminé : Animation de transition entre pages (framer-motion)
+
+### Fichiers ajoutés/modifiés
+
+| Fichier | Modification |
+|---------|--------------|
+| `package.json` | +framer-motion |
+| `src/components/layout/page-transition.tsx` | Nouveau composant PageTransition |
+
+### Usage
+
+```tsx
+import { PageTransition } from "@/components/layout/page-transition";
+
+export default function MyPage() {
+  return (
+    <PageTransition>
+      <Container>
+        {/* Contenu de la page */}
+      </Container>
+    </PageTransition>
+  );
+}
+```
+
+### Notes techniques
+
+- Le composant est un client component ("use client") car framer-motion utilise des hooks React
+- Animation par defaut: fade-in (opacity 0->1) + slide (y: 10px -> 0)
+- Duree: 200ms avec ease-out
+- Les variants et transition sont personnalisables via props
+- Compatible avec le App Router de Next.js
+
+---
+
+## Terminé : Smooth Scroll et Micro-interactions
+
+### Analyse
+
+Après lecture des fichiers :
+- `globals.css` : pas de `scroll-behavior: smooth` actuellement
+- `button.tsx` : a déjà `transition-all` dans les variants
+- `card.tsx` : pas de transition par défaut
+- `exercise-card.tsx` : a `transition-all active:scale-[0.98]` (bien)
+- `timer-circle.tsx` : a `transition-all duration-200` sur le cercle (bien)
+- `history/page.tsx` : les workout cards n'ont pas de hover states
+- `page.tsx` (home) : les menu cards ont `transition-colors hover:bg-accent` (bien)
+
+### Plan d'action
+
+- [x] Ajouter `scroll-behavior: smooth` dans `globals.css`
+- [x] Ajouter transition sur le composant Card de base
+- [x] Améliorer les rating buttons dans la modale d'édition (history)
+- [x] Ajouter hover scale subtil sur les workout cards (history)
+
+### Fichiers modifiés
+
+| Fichier | Modification |
+|---------|--------------|
+| `src/app/globals.css` | Ajout `scroll-behavior: smooth` + media query pour `prefers-reduced-motion` |
+| `src/components/ui/card.tsx` | Ajout `transition-colors` dans les classes de base |
+| `src/app/history/page.tsx` | Ajout `hover:shadow-md hover:scale-[1.01]` sur workout cards + `hover:scale-105 active:scale-95` sur rating buttons |
+
+### Revue des changements
+
+**Smooth scroll :**
+- Ajouté `scroll-behavior: smooth` sur l'élément `html`
+- Respecte les préférences utilisateur avec `@media (prefers-reduced-motion: reduce)` pour désactiver le smooth scroll si l'utilisateur préfère moins d'animations
+
+**Card component :**
+- Ajouté `transition-colors` aux classes de base pour permettre des transitions fluides sur les changements de couleur (hover states)
+
+**History page - Workout cards :**
+- Ajouté `transition-all hover:shadow-md hover:scale-[1.01]` pour un effet subtil au survol
+- L'échelle de 1.01 est très légère et performante
+
+**History page - Rating buttons :**
+- Ajouté `hover:scale-105` pour un feedback visuel au survol
+- Ajouté `active:scale-95` pour un feedback au clic
+- Ajouté `scale-105` sur le bouton sélectionné pour le mettre en évidence
+
+---
+
+## Terminé : Sauvegarde automatique + Édition historique
 
 ### Problèmes à résoudre
 
@@ -193,18 +329,162 @@ Voir les sections "Terminé" ci-dessous pour l'historique complet.
 
 ---
 
+## Terminé : Animation de transition entre pages
+
+- [x] Installer framer-motion
+- [x] Créer composant `PageTransition` dans `src/components/layout/page-transition.tsx`
+- [x] Documenter l'utilisation du composant
+
+---
+
+## Terminé : Lazy loading du chart
+
+### Plan d'action
+
+- [x] Implémenter le lazy loading avec `next/dynamic` dans `history/page.tsx`
+- [x] Créer un ChartSkeleton inline pour le placeholder de chargement
+- [x] Désactiver le SSR pour le chart (recharts ne supporte pas le SSR)
+
+### Fichiers modifiés
+
+| Fichier | Modification |
+|---------|--------------|
+| `src/app/history/page.tsx` | Import dynamique du VolumeAreaChart avec `next/dynamic` |
+
+### Revue des changements
+
+- Remplacé l'import statique de `VolumeAreaChart` par un import dynamique avec `next/dynamic`
+- Ajouté un skeleton de chargement pendant le téléchargement du composant
+- Désactivé le SSR (`ssr: false`) car recharts utilise des APIs navigateur (window, document)
+- Cela améliore le temps de chargement initial en différant le téléchargement de la librairie recharts (~150kb)
+
+---
+
+## Core Web Vitals Analysis
+
+### Current Status
+
+#### Performance Monitoring Setup
+
+| Feature | Status | Details |
+|---------|--------|---------|
+| `web-vitals` package | Installed (v5.1.0) | Tracks CLS, LCP, INP, FCP, TTFB |
+| Web Vitals Reporter | Implemented | `src/components/analytics/web-vitals.tsx` |
+| Vercel Analytics | Installed (v1.6.1) | `<Analytics />` in providers |
+| Sentry | Configured | Error tracking + source maps |
+
+**Web Vitals monitored:**
+- CLS (Cumulative Layout Shift)
+- LCP (Largest Contentful Paint)
+- INP (Interaction to Next Paint) - replaces FID
+- FCP (First Contentful Paint)
+- TTFB (Time to First Byte)
+
+Currently, metrics are logged to console in development. Production metrics are sent to Vercel Analytics automatically.
+
+---
+
+### What's Already Optimized
+
+| Optimization | Implementation | File |
+|--------------|----------------|------|
+| Font loading | `next/font/google` with Inter | `src/app/layout.tsx` |
+| Font display | Variable font with subset | `subsets: ["latin"]` |
+| Lazy loading charts | `next/dynamic` with `ssr: false` | `src/app/history/page.tsx`, `src/components/charts/lazy-charts.tsx` |
+| Loading skeletons | All major pages have `loading.tsx` | `src/app/*/loading.tsx` |
+| Preconnect | Supabase URL preconnected | `src/app/layout.tsx` |
+| DNS prefetch | `supabase.co` prefetched | `src/app/layout.tsx` |
+| Reduced motion | CSS media query respect | `src/app/globals.css` |
+| No images | App uses only SVG icons | No raster images to optimize |
+| Security headers | CSP, X-Frame-Options, etc. | `next.config.ts` |
+| Middleware optimization | Static files excluded | `src/middleware.ts` |
+| useMemo/useCallback | 25 occurrences across 8 files | Various components |
+
+---
+
+### Recommendations
+
+#### High Priority
+
+1. **Send Web Vitals to analytics in production**
+   - The reporter only logs to console in dev
+   - Vercel Analytics captures automatically, but custom tracking to Sentry would help correlate performance with errors
+   - Location: `src/components/analytics/web-vitals.tsx` (lines 21-29 commented out)
+
+2. **Add `fetchPriority="high"` for critical resources**
+   - Currently no critical images, but if adding hero images, use priority loading
+
+#### Medium Priority
+
+3. **Consider code splitting for heavy pages**
+   - `src/app/exercises/page.tsx` imports multiple stores and components
+   - Could benefit from route-based splitting
+
+4. **Add `VolumeAreaChart` to lazy-charts.tsx**
+   - Currently lazy-loaded inline in history page
+   - Consolidating in `lazy-charts.tsx` would improve consistency
+
+5. **Sentry source maps**
+   - Already configured with `hideSourceMaps: true`
+   - Ensure `SENTRY_ORG` and `SENTRY_PROJECT` env vars are set in production
+
+#### Low Priority
+
+6. **Consider `@next/bundle-analyzer`**
+   - Would help identify bundle size issues
+   - Not installed yet
+
+7. **Service Worker for offline caching**
+   - PWA manifest exists but no service worker
+   - Would improve repeat visits (TTFB)
+
+---
+
+### Bundle Analysis (Manual Review)
+
+| Package | Size (approx.) | Mitigation |
+|---------|----------------|------------|
+| recharts | ~150-200kb | Lazy loaded |
+| @supabase/supabase-js | ~50kb | Required |
+| lucide-react | Tree-shakeable | Only imported icons bundled |
+| date-fns | ~10kb (tree-shakeable) | Modular imports |
+| zustand | ~3kb | Minimal |
+| framer-motion | ~30kb | Used for page transitions |
+
+---
+
+### Summary
+
+The EMOM app has a **solid foundation** for Core Web Vitals:
+
+- Web Vitals monitoring is set up and actively tracking metrics
+- Vercel Analytics provides production insights
+- Lazy loading is implemented for the heaviest dependency (recharts)
+- Font loading follows best practices with `next/font`
+- Loading states prevent layout shifts
+- No heavy images to optimize
+
+**Main gaps:**
+1. Custom Web Vitals reporting to Sentry (commented out)
+2. No bundle analyzer for ongoing monitoring
+3. No service worker for offline/caching improvements
+
+**Overall assessment:** Production-ready with room for monitoring improvements.
+
+---
+
 ## À faire (backlog)
 
 ### UX/UI
-- [ ] Animation de transition entre les pages
-- [ ] Toast de confirmation après suppression
-- [ ] Pull-to-refresh sur mobile
+- [x] Animation de transition entre les pages
+- [x] Toast de confirmation après suppression
+- [x] Pull-to-refresh sur mobile
 
 ### Technique
-- [ ] Lazy loading des charts
-- [ ] Core Web Vitals
-- [ ] Monitoring (Sentry)
-- [ ] PWA améliorée
+- [x] Lazy loading des charts
+- [x] Core Web Vitals (analysis complete - see section above)
+- [x] Monitoring (Sentry configured)
+- [x] PWA améliorée (icons PNG, manifest enrichi, meta tags)
 
 ### Fonctionnalités futures
 - [ ] Export des données
