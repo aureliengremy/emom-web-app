@@ -54,6 +54,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
+import { ShareButton } from "@/components/workout/share-button";
 import { cn } from "@/lib/utils";
 
 const RATING_COLORS = {
@@ -466,11 +467,14 @@ export default function HistoryPage() {
                         {formatDate(workout.date)}
                       </span>
                     </div>
-                    {workout.rating && (
-                      <Badge className={cn(RATING_COLORS[workout.rating])}>
-                        {RATING_LABELS[workout.rating]}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {workout.rating && (
+                        <Badge className={cn(RATING_COLORS[workout.rating])}>
+                          {RATING_LABELS[workout.rating]}
+                        </Badge>
+                      )}
+                      <ShareButton workout={workout} />
+                    </div>
                   </div>
 
                   {/* Sets */}

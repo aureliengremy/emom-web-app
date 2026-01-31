@@ -14,7 +14,8 @@ import { useWorkoutStore } from "@/stores/workout-store";
 import { useSessionStore } from "@/stores/session-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { formatDuration, type WorkoutRating } from "@/types";
-import { Trophy, Clock, Repeat, Home, AlertCircle, ChevronDown, ChevronRight, MessageSquare } from "lucide-react";
+import { Trophy, Clock, Repeat, Home, AlertCircle, ChevronDown, ChevronRight, MessageSquare, Share2 } from "lucide-react";
+import { ShareButton } from "@/components/workout/share-button";
 import { cn } from "@/lib/utils";
 
 const RATING_OPTIONS: { value: WorkoutRating; emoji: string; label: string }[] = [
@@ -152,6 +153,10 @@ export default function WorkoutCompletePage() {
         <Trophy className="mx-auto mb-4 h-16 w-16 text-primary" />
         <h1 className="mb-2 text-2xl font-bold">Séance terminée !</h1>
         <p className="text-muted-foreground">Excellent travail</p>
+        {/* Bouton partager */}
+        <div className="mt-4">
+          <ShareButton workout={currentWorkout} variant="full" />
+        </div>
       </div>
 
       {/* Stats */}
