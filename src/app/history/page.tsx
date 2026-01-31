@@ -44,6 +44,9 @@ import {
 } from "@/lib/chart-utils";
 import {
   ArrowLeft,
+  ArrowUp,
+  ArrowDown,
+  Minus,
   Calendar,
   Clock,
   Repeat,
@@ -52,6 +55,11 @@ import {
   Pencil,
   X,
 } from "lucide-react";
+import {
+  getGlobalWeeklyComparison,
+  formatPercentChange,
+  getTrend,
+} from "@/lib/comparison-utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { ShareButton } from "@/components/workout/share-button";
@@ -193,6 +201,15 @@ export default function HistoryPage() {
     (sum, w) => sum + w.totalDuration,
     0
   );
+
+  // Comparaison semaine en cours vs semaine precedente
+  const weeklyComparison = useMemo(
+    () => getGlobalWeeklyComparison(workoutHistory),
+    [workoutHistory]
+  );
+
+  // Afficher la section progression uniquement si donnees suffisantes
+  const showProgression = weeklyComparison.currentWeek.workouts > 0 || weeklyComparison.previousWeek.workouts > 0;
 
   // Afficher un skeleton pendant le chargement
   if (!isInitialized) {
@@ -403,7 +420,7 @@ export default function HistoryPage() {
             <Card>
               <CardContent className="flex flex-col items-center p-3">
                 <span className="text-xl font-bold">{totalWorkouts}</span>
-                <span className="text-xs text-muted-foreground">Séances</span>
+                <span className="text-xs text-muted-foreground">Seances</span>
               </CardContent>
             </Card>
             <Card>
@@ -421,6 +438,102 @@ export default function HistoryPage() {
               </CardContent>
             </Card>
           </div>
+        )}
+
+        {/* Progression semaine vs semaine precedente */}
+        {showProgression && (
+          <Card className="mb-6">
+            <CardContent className="p-4">
+              <p className="mb-3 text-sm font-medium text-muted-foreground">
+                Cette semaine vs semaine derniere
+              </p>
+              <div className="grid grid-cols-3 gap-4">
+                {/* Seances */}
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center gap-1">
+                    {getTrend(weeklyComparison.workoutsDiff) === "up" && (
+                      <ArrowUp className="h-4 w-4 text-green-500" />
+                    )}
+                    {getTrend(weeklyComparison.workoutsDiff) === "down" && (
+                      <ArrowDown className="h-4 w-4 text-red-500" />
+                    )}
+                    {getTrend(weeklyComparison.workoutsDiff) === "neutral" && (
+                      <Minus className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    <span
+                      className={cn(
+                        "text-sm font-medium",
+                        getTrend(weeklyComparison.workoutsDiff) === "up" && "text-green-500",
+                        getTrend(weeklyComparison.workoutsDiff) === "down" && "text-red-500"
+                      )}
+                    >
+                      {formatPercentChange(weeklyComparison.workoutsPercent)}
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Seances</span>
+                  <span className="text-xs text-muted-foreground">
+                    {weeklyComparison.currentWeek.workouts} vs {weeklyComparison.previousWeek.workouts}
+                  </span>
+                </div>
+
+                {/* Reps */}
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center gap-1">
+                    {getTrend(weeklyComparison.repsDiff) === "up" && (
+                      <ArrowUp className="h-4 w-4 text-green-500" />
+                    )}
+                    {getTrend(weeklyComparison.repsDiff) === "down" && (
+                      <ArrowDown className="h-4 w-4 text-red-500" />
+                    )}
+                    {getTrend(weeklyComparison.repsDiff) === "neutral" && (
+                      <Minus className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    <span
+                      className={cn(
+                        "text-sm font-medium",
+                        getTrend(weeklyComparison.repsDiff) === "up" && "text-green-500",
+                        getTrend(weeklyComparison.repsDiff) === "down" && "text-red-500"
+                      )}
+                    >
+                      {formatPercentChange(weeklyComparison.repsPercent)}
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Reps</span>
+                  <span className="text-xs text-muted-foreground">
+                    {weeklyComparison.currentWeek.totalReps} vs {weeklyComparison.previousWeek.totalReps}
+                  </span>
+                </div>
+
+                {/* Duree */}
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center gap-1">
+                    {getTrend(weeklyComparison.durationDiff) === "up" && (
+                      <ArrowUp className="h-4 w-4 text-green-500" />
+                    )}
+                    {getTrend(weeklyComparison.durationDiff) === "down" && (
+                      <ArrowDown className="h-4 w-4 text-red-500" />
+                    )}
+                    {getTrend(weeklyComparison.durationDiff) === "neutral" && (
+                      <Minus className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    <span
+                      className={cn(
+                        "text-sm font-medium",
+                        getTrend(weeklyComparison.durationDiff) === "up" && "text-green-500",
+                        getTrend(weeklyComparison.durationDiff) === "down" && "text-red-500"
+                      )}
+                    >
+                      {formatPercentChange(weeklyComparison.durationPercent)}
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Minutes</span>
+                  <span className="text-xs text-muted-foreground">
+                    {Math.round(weeklyComparison.currentWeek.totalDuration / 60)} vs {Math.round(weeklyComparison.previousWeek.totalDuration / 60)}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Filtres par exercice */}
