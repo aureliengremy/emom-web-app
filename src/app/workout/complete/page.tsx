@@ -28,7 +28,7 @@ const MAX_COMMENT_LENGTH = 500;
 
 export default function WorkoutCompletePage() {
   const router = useRouter();
-  const { currentWorkout, finishWorkout, updateSetFeedback } = useWorkoutStore();
+  const { currentWorkout, updateWorkoutFeedback, updateSetFeedback } = useWorkoutStore();
   const { clearSession } = useSessionStore();
   const { user } = useAuthStore();
   const isGuest = !user;
@@ -123,11 +123,19 @@ export default function WorkoutCompletePage() {
 
     setIsSaving(true);
     try {
-      await finishWorkout(selectedRating ?? undefined, notes.trim() || undefined);
+      // Le workout est déjà sauvegardé automatiquement via autoSaveWorkout
+      // On met juste à jour le rating et les notes
+      if (currentWorkout && !isGuest) {
+        await updateWorkoutFeedback(
+          currentWorkout.id,
+          selectedRating ?? undefined,
+          notes.trim() || undefined
+        );
+      }
       clearSession();
       router.push("/");
     } catch (error) {
-      console.error("Erreur sauvegarde workout:", error);
+      console.error("Erreur sauvegarde feedback:", error);
       clearSession();
       router.push("/");
     }

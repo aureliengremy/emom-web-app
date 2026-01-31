@@ -146,6 +146,24 @@ export async function deleteSupabaseWorkout(workoutId: string): Promise<void> {
   }
 }
 
+export async function updateSupabaseWorkoutFeedback(
+  workoutId: string,
+  rating?: string,
+  notes?: string
+): Promise<void> {
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("workouts")
+    .update({ rating, notes })
+    .eq("id", workoutId);
+
+  if (error) {
+    console.error("Error updating workout feedback:", error);
+    throw error;
+  }
+}
+
 // ============================================
 // User Settings
 // ============================================

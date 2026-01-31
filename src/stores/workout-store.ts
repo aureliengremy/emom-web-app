@@ -26,6 +26,7 @@ import {
   getSupabaseWorkouts,
   saveSupabaseWorkout,
   deleteSupabaseWorkout,
+  updateSupabaseWorkoutFeedback,
 } from "@/lib/supabase/data-service";
 import { useAuthStore } from "./auth-store";
 
@@ -62,6 +63,8 @@ interface WorkoutState {
   startWorkout: (plan: SessionPlan) => void;
   cancelWorkout: () => void;
   finishWorkout: (rating?: WorkoutRating, notes?: string) => Promise<void>;
+  autoSaveWorkout: () => Promise<void>;
+  updateWorkoutFeedback: (workoutId: string, rating?: WorkoutRating, notes?: string) => Promise<void>;
   updateSetFeedback: (setId: string, feedback: SetFeedback) => void;
 
   // Actions - Timer
@@ -262,6 +265,71 @@ export const useWorkoutStore = create<WorkoutState>()(
     }
   },
 
+  // Sauvegarde automatique du workout (appelé dès que le workout est terminé)
+  // Sauvegarde sans rating/notes pour éviter la perte en cas de refresh
+  autoSaveWorkout: async () => {
+    const user = getAuthUser();
+    const { currentWorkout } = get();
+
+    if (!currentWorkout || !user) return;
+
+    // Calculer les totaux
+    const totalReps = currentWorkout.sets.reduce(
+      (sum, s) => sum + s.totalReps,
+      0
+    );
+    const totalDuration = currentWorkout.sets.reduce(
+      (sum, s) => sum + s.actualDuration,
+      0
+    );
+
+    const finishedWorkout: Workout = {
+      ...currentWorkout,
+      totalReps,
+      totalDuration,
+      completed: true,
+    };
+
+    try {
+      await saveSupabaseWorkout(user.id, finishedWorkout);
+      // Ajouter à l'historique local mais garder currentWorkout pour la page complete
+      set((state) => ({
+        workoutHistory: [finishedWorkout, ...state.workoutHistory],
+        currentWorkout: finishedWorkout,
+      }));
+    } catch (error) {
+      console.error("Error auto-saving workout:", error);
+      // Ne pas reset le currentWorkout en cas d'erreur pour permettre un retry
+    }
+  },
+
+  // Met à jour le rating et les notes d'un workout existant
+  updateWorkoutFeedback: async (workoutId, rating, notes) => {
+    const user = getAuthUser();
+    if (!user) return;
+
+    // Optimistic update
+    const previousWorkouts = get().workoutHistory;
+    set((state) => ({
+      workoutHistory: state.workoutHistory.map((w) =>
+        w.id === workoutId ? { ...w, rating, notes } : w
+      ),
+      // Aussi mettre à jour currentWorkout si c'est le même
+      currentWorkout:
+        state.currentWorkout?.id === workoutId
+          ? { ...state.currentWorkout, rating, notes }
+          : state.currentWorkout,
+    }));
+
+    try {
+      await updateSupabaseWorkoutFeedback(workoutId, rating, notes);
+    } catch (error) {
+      // Rollback en cas d'erreur
+      set({ workoutHistory: previousWorkouts });
+      throw error;
+    }
+  },
+
   updateSetFeedback: (setId, feedback) => {
     set((state) => ({
       currentWorkout: state.currentWorkout
@@ -386,6 +454,9 @@ export const useWorkoutStore = create<WorkoutState>()(
         set((state) => ({
           timer: { ...state.timer, status: "finished" },
         }));
+        // Auto-save le workout immédiatement (sans rating/notes)
+        // pour éviter la perte en cas de refresh
+        get().autoSaveWorkout();
       } else {
         // Passer en pause entre sets (garder status running pour continuer le countdown)
         set((state) => ({
