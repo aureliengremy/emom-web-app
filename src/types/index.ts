@@ -147,6 +147,9 @@ export interface TimerState {
 
 export type AppLanguage = "fr" | "en";
 
+// ID des packs de sons disponibles
+export type SoundPackId = "minimal" | "sport" | "zen" | "arcade";
+
 export interface UserSettings {
   soundEnabled: boolean;
   vibrationEnabled: boolean;
@@ -154,6 +157,8 @@ export interface UserSettings {
   defaultEMOMDuration: number; // minutes
   hasCompletedSetup: boolean;
   language: AppLanguage; // Langue d'affichage des exercices
+  countdownSoundPack: SoundPackId; // ID du pack de sons
+  countdownSoundsEnabled: boolean; // Activer/desactiver les sons du countdown
 }
 
 // === EMOM Tables ===
