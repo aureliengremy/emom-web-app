@@ -203,6 +203,8 @@ export async function saveSupabaseSettings(
     default_emom_duration: settings.defaultEMOMDuration,
     has_completed_setup: settings.hasCompletedSetup,
     language: settings.language,
+    countdown_sound_pack: settings.countdownSoundPack,
+    countdown_sounds_enabled: settings.countdownSoundsEnabled,
     updated_at: new Date().toISOString(),
   };
 
@@ -286,6 +288,8 @@ interface DbSettings {
   default_emom_duration: number;
   has_completed_setup: boolean;
   language?: string;
+  countdown_sound_pack?: string;
+  countdown_sounds_enabled?: boolean;
 }
 
 function mapDbSettingsToSettings(db: DbSettings): UserSettings {
@@ -296,6 +300,8 @@ function mapDbSettingsToSettings(db: DbSettings): UserSettings {
     defaultEMOMDuration: db.default_emom_duration,
     hasCompletedSetup: db.has_completed_setup,
     language: (db.language as UserSettings["language"]) ?? "fr",
+    countdownSoundPack: (db.countdown_sound_pack as UserSettings["countdownSoundPack"]) ?? "minimal",
+    countdownSoundsEnabled: db.countdown_sounds_enabled ?? true,
   };
 }
 

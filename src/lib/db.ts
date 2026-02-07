@@ -70,6 +70,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   defaultEMOMDuration: 10,
   hasCompletedSetup: false,
   language: "fr",
+  countdownSoundPack: "minimal",
+  countdownSoundsEnabled: true,
 };
 
 export async function getSettings(): Promise<UserSettings> {

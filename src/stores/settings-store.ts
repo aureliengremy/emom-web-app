@@ -36,6 +36,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   defaultEMOMDuration: 10,
   hasCompletedSetup: false,
   language: "fr",
+  countdownSoundPack: "minimal",
+  countdownSoundsEnabled: true,
 };
 
 // Helper pour vérifier si l'utilisateur est connecté
