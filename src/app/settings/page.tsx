@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { ExportSection } from "@/components/settings/export-section";
+import { SoundSettings } from "@/components/settings/sound-settings";
 import { PAUSE_DURATIONS, EMOM_DURATIONS } from "@/types";
 import {
   ArrowLeft,
@@ -204,6 +205,9 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Sons du countdown */}
+        <SoundSettings />
 
         {/* Durée pause par défaut */}
         <Card className="mb-6">
