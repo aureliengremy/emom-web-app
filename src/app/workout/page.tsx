@@ -23,7 +23,6 @@ import { useWorkoutStore } from "@/stores/workout-store";
 import { useSessionStore } from "@/stores/session-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useSound } from "@/hooks/use-sound";
-import { playTick10s, playTick5to1, playFinish } from "@/lib/sound-packs";
 import { Pause, Play, X, Check } from "lucide-react";
 
 export default function WorkoutPage() {
@@ -39,30 +38,12 @@ export default function WorkoutPage() {
     getCurrentPlannedSet,
   } = useWorkoutStore();
   const { getSessionPlan, clearSession, hasPlannedSets } = useSessionStore();
-  const { playBeep, playStart, playComplete, playWarning } = useSound();
+  const { playBeep, playStart, playComplete, playWarning, playCountdownTick10s, playCountdownTick5to1, playCountdownFinish } = useSound();
   const { settings } = useSettingsStore();
   const lastSecondsRef = useRef(60);
   const lastPauseSecondsRef = useRef(0);
   const wasPausingRef = useRef(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
-
-  // Créer l'AudioContext pour les sons de countdown
-  const getAudioContext = useCallback(() => {
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    }
-    return audioContextRef.current;
-  }, []);
-
-  // Nettoyer l'AudioContext au démontage
-  useEffect(() => {
-    return () => {
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-    };
-  }, []);
 
   // Démarrer le workout si pas encore commencé
   useEffect(() => {
@@ -100,26 +81,20 @@ export default function WorkoutPage() {
       if (currentTimer.status === "running" && !currentTimer.isPausingBetweenSets) {
         const seconds = currentTimer.secondsRemaining;
 
-        // Jouer les sons de countdown si activés
-        if (settings.countdownSoundsEnabled && seconds !== lastSecondsRef.current) {
-          const audioCtx = getAudioContext();
-          const packId = settings.countdownSoundPack;
-
-          if (seconds === 10) {
-            // Son discret à 10 secondes
-            playTick10s(packId, audioCtx);
-          } else if (seconds >= 1 && seconds <= 5) {
-            // Son plus audible de 5 à 1 seconde
-            playTick5to1(packId, audioCtx);
-          } else if (seconds === 0) {
-            // Son de fin (gong/cloche) à 0 seconde
-            playFinish(packId, audioCtx);
+        if (seconds !== lastSecondsRef.current) {
+          if (settings.countdownSoundsEnabled) {
+            // Sons de countdown via le pack sélectionné
+            if (seconds === 10) {
+              playCountdownTick10s();
+            } else if (seconds >= 1 && seconds <= 5) {
+              playCountdownTick5to1();
+            } else if (seconds === 0) {
+              playCountdownFinish();
+            }
+          } else if (seconds <= 3 && seconds > 0) {
+            // Fallback: warning sound pour 3-2-1 si countdown sounds désactivés
+            playWarning();
           }
-        }
-
-        // Fallback: warning sound pour 3-2-1 si countdown sounds désactivés
-        if (!settings.countdownSoundsEnabled && seconds <= 3 && seconds > 0 && seconds !== lastSecondsRef.current) {
-          playWarning();
         }
 
         lastSecondsRef.current = seconds;
@@ -151,7 +126,7 @@ export default function WorkoutPage() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timer.status, tick, router, playBeep, playComplete, playWarning, playStart, settings.countdownSoundsEnabled, settings.countdownSoundPack, getAudioContext]);
+  }, [timer.status, tick, router, playBeep, playComplete, playWarning, playStart, playCountdownTick10s, playCountdownTick5to1, playCountdownFinish, settings.countdownSoundsEnabled]);
 
   // Garder l'écran allumé
   useEffect(() => {

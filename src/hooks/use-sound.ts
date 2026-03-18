@@ -6,6 +6,7 @@
 
 import { useCallback, useRef, useEffect } from "react";
 import { useSettingsStore } from "@/stores/settings-store";
+import { playTick10s, playTick5to1, playFinish } from "@/lib/sound-packs";
 
 // Fréquences des sons (Hz)
 const SOUNDS = {
@@ -21,6 +22,8 @@ export function useSound() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const soundEnabled = useSettingsStore((s) => s.settings.soundEnabled);
   const vibrationEnabled = useSettingsStore((s) => s.settings.vibrationEnabled);
+  const countdownSoundsEnabled = useSettingsStore((s) => s.settings.countdownSoundsEnabled);
+  const countdownSoundPack = useSettingsStore((s) => s.settings.countdownSoundPack);
 
   // Initialiser AudioContext au premier usage
   const getAudioContext = useCallback(() => {
@@ -100,6 +103,34 @@ export function useSound() {
     vibrate(200);
   }, [playSound, vibrate]);
 
+  // Sons de countdown (packs configurables)
+  const playCountdownTick10s = useCallback(() => {
+    if (!soundEnabled || !countdownSoundsEnabled) return;
+    try {
+      playTick10s(countdownSoundPack, getAudioContext());
+    } catch (error) {
+      console.warn("Audio error:", error);
+    }
+  }, [soundEnabled, countdownSoundsEnabled, countdownSoundPack, getAudioContext]);
+
+  const playCountdownTick5to1 = useCallback(() => {
+    if (!soundEnabled || !countdownSoundsEnabled) return;
+    try {
+      playTick5to1(countdownSoundPack, getAudioContext());
+    } catch (error) {
+      console.warn("Audio error:", error);
+    }
+  }, [soundEnabled, countdownSoundsEnabled, countdownSoundPack, getAudioContext]);
+
+  const playCountdownFinish = useCallback(() => {
+    if (!soundEnabled || !countdownSoundsEnabled) return;
+    try {
+      playFinish(countdownSoundPack, getAudioContext());
+    } catch (error) {
+      console.warn("Audio error:", error);
+    }
+  }, [soundEnabled, countdownSoundsEnabled, countdownSoundPack, getAudioContext]);
+
   // Nettoyer à la destruction
   useEffect(() => {
     return () => {
@@ -116,5 +147,8 @@ export function useSound() {
     playStart,
     playComplete,
     playWarning,
+    playCountdownTick10s,
+    playCountdownTick5to1,
+    playCountdownFinish,
   };
 }
