@@ -51,8 +51,32 @@ export const signupSchema = z
     path: ["confirmPassword"],
   });
 
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .min(1, messages.required)
+    .email(messages.email),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(1, messages.required)
+      .min(6, messages.passwordMin),
+    confirmPassword: z
+      .string()
+      .min(1, messages.required),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: messages.passwordMatch,
+    path: ["confirmPassword"],
+  });
+
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type SignupFormData = z.infer<typeof signupSchema>;
+export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 // === Exercise ===
 

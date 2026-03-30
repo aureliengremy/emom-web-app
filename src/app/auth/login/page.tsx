@@ -5,6 +5,7 @@
 // ============================================
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -195,6 +196,15 @@ export default function LoginPage() {
                     <Mail className="h-4 w-4" />
                     {isLoading ? "Chargement..." : "Se connecter"}
                   </Button>
+
+                  <div className="text-right">
+                    <Link
+                      href="/auth/forgot-password"
+                      className="text-xs text-muted-foreground hover:text-primary"
+                    >
+                      Mot de passe oublié ?
+                    </Link>
+                  </div>
                 </form>
               )}
 

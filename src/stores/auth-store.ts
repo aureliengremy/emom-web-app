@@ -21,6 +21,8 @@ interface AuthState {
   signUpWithEmail: (email: string, password: string) => Promise<{ error?: string; needsEmailConfirmation?: boolean; success?: boolean }>;
   signInWithGoogle: () => Promise<void>;
   signInWithApple: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error?: string; success?: boolean }>;
+  updatePassword: (newPassword: string) => Promise<{ error?: string; success?: boolean }>;
   signOut: () => Promise<void>;
 }
 
@@ -147,6 +149,42 @@ export const useAuthStore = create<AuthState>()(
       set({ isLoading: false });
       throw error;
     }
+  },
+
+  resetPassword: async (email) => {
+    set({ isLoading: true });
+    const supabase = createClient();
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
+    });
+
+    set({ isLoading: false });
+
+    if (error) {
+      console.error("Reset password error:", error);
+      return { error: error.message };
+    }
+
+    return { success: true };
+  },
+
+  updatePassword: async (newPassword) => {
+    set({ isLoading: true });
+    const supabase = createClient();
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    set({ isLoading: false });
+
+    if (error) {
+      console.error("Update password error:", error);
+      return { error: error.message };
+    }
+
+    return { success: true };
   },
 
   signOut: async () => {
