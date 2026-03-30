@@ -5,8 +5,10 @@
 // ============================================
 
 import { memo } from "react";
+import { Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { Exercise } from "@/types";
 import {
   getDifficultyColor,
@@ -21,12 +23,14 @@ interface ExerciseCardProps {
   exercise: Exercise;
   onClick?: () => void;
   selected?: boolean;
+  onAddToWorkout?: () => void;
 }
 
 export const ExerciseCard = memo(function ExerciseCard({
   exercise,
   onClick,
   selected = false,
+  onAddToWorkout,
 }: ExerciseCardProps) {
   const language = useSettingsStore((s) => s.settings.language);
 
@@ -73,9 +77,25 @@ export const ExerciseCard = memo(function ExerciseCard({
             </span>
           </div>
         </div>
-        <Badge className={cn("shrink-0", difficultyColor)}>
-          {difficultyLabel}
-        </Badge>
+        <div className="flex items-center gap-2 shrink-0">
+          {onAddToWorkout && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onAddToWorkout();
+              }}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          )}
+          <Badge className={cn(difficultyColor)}>
+            {difficultyLabel}
+          </Badge>
+        </div>
       </CardContent>
     </Card>
   );

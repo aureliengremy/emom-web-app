@@ -18,10 +18,12 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useExerciseStore } from "@/stores/exercise-store";
+import { useSessionStore } from "@/stores/session-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { getFamilyLabel, getExerciseDisplayName } from "@/data/emom-tables";
+import { toast } from "sonner";
 import type { ExerciseCategory, ExerciseFamily, ExerciseDifficulty, Exercise } from "@/types";
-import { ArrowLeft, Plus, Filter, X, Search, ChevronDown } from "lucide-react";
+import { ArrowLeft, Plus, Filter, X, Search, ChevronDown, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -48,6 +50,8 @@ export default function ExercisesPage() {
   const exercises = useExerciseStore((s) => s.exercises);
   const isLoaded = useExerciseStore((s) => s.isLoaded);
   const language = useSettingsStore((s) => s.settings.language);
+  const addSet = useSessionStore((s) => s.addSet);
+  const plannedSets = useSessionStore((s) => s.plannedSets);
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ExerciseCategory | "all">("all");
@@ -349,7 +353,13 @@ export default function ExercisesPage() {
                 <CollapsibleContent className="mt-2 space-y-2 pl-2">
                   {exercisesByFamily[family].map((exercise) => (
                     <Link key={exercise.id} href={`/exercises/${exercise.id}`}>
-                      <ExerciseCard exercise={exercise} />
+                      <ExerciseCard
+                        exercise={exercise}
+                        onAddToWorkout={() => {
+                          addSet(exercise);
+                          toast.success(`${getExerciseDisplayName(exercise, language)} ajouté au workout`);
+                        }}
+                      />
                     </Link>
                   ))}
                 </CollapsibleContent>
@@ -393,6 +403,19 @@ export default function ExercisesPage() {
           </>
         )}
       </Main>
+
+      {/* Bouton flottant workout en cours */}
+      {plannedSets.length > 0 && (
+        <Link
+          href="/"
+          className="fixed bottom-6 right-6 z-50"
+        >
+          <Button className="gap-2 rounded-full shadow-lg">
+            <Play className="h-4 w-4" />
+            {plannedSets.length} set{plannedSets.length > 1 ? "s" : ""}
+          </Button>
+        </Link>
+      )}
 
       <AddExerciseModal open={showAddModal} onOpenChange={setShowAddModal} />
     </Container>
