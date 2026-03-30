@@ -79,12 +79,11 @@ export default function SessionsPage() {
     }
   };
 
-  const formatDuration = (pauseDuration: number, sets: number) => {
-    const totalSetsDuration = sets * 10 * 60; // Approximation: 10 min par set
-    const totalPauses = (sets - 1) * pauseDuration;
-    const totalSeconds = totalSetsDuration + totalPauses;
-    const minutes = Math.floor(totalSeconds / 60);
-    return `~${minutes} min`;
+  const getSessionDuration = (session: SavedSession) => {
+    const totalSetsDuration = session.sets.reduce((sum, s) => sum + s.duration, 0); // en minutes
+    const totalPausesMinutes = ((session.sets.length - 1) * session.pauseDuration) / 60;
+    const totalMinutes = Math.round(totalSetsDuration + totalPausesMinutes);
+    return `${totalMinutes} min`;
   };
 
   if (!isInitialized) {
@@ -198,12 +197,7 @@ export default function SessionsPage() {
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
-                        <span>
-                          {formatDuration(
-                            session.pauseDuration,
-                            session.sets.length
-                          )}
-                        </span>
+                        <span>{getSessionDuration(session)}</span>
                       </div>
                     </div>
 

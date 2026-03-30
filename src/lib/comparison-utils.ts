@@ -102,7 +102,7 @@ function calculatePeriodStats(
 
   const totalReps = sets.reduce((sum, s) => sum + s.totalReps, 0);
   const totalDuration = sets.reduce(
-    (sum, s) => sum + s.emomConfig.duration,
+    (sum, s) => sum + Math.round(s.actualDuration / 60),
     0
   );
 

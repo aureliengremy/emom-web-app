@@ -93,10 +93,11 @@ export default function HomePage() {
     loadSessionPlan(session);
   };
 
-  const formatDuration = (pauseDuration: number, sets: number) => {
-    if (sets === 0) return "0 min";
-    const totalMinutes = sets * 10 + Math.floor((pauseDuration * (sets - 1)) / 60);
-    return `${totalMinutes} min`;
+  const getSessionDuration = (session: SavedSession) => {
+    if (session.sets.length === 0) return "0 min";
+    const totalSetsDuration = session.sets.reduce((sum, s) => sum + s.duration, 0);
+    const totalPausesMinutes = ((session.sets.length - 1) * session.pauseDuration) / 60;
+    return `${Math.round(totalSetsDuration + totalPausesMinutes)} min`;
   };
 
   return (
@@ -163,10 +164,7 @@ export default function HomePage() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {formatDuration(
-                          session.pauseDuration,
-                          session.sets.length
-                        )}
+                        {getSessionDuration(session)}
                       </span>
                     </div>
                   </div>
